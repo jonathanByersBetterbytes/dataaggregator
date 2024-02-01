@@ -1,4 +1,9 @@
 const cloudinary = require("../middleware/cloudinary");
+const pdf2excel = require("pdf-to-excel");
+const XLSX = require('xlsx')
+let fs = require('fs'), PDFParser = require("pdf2json");
+let pdfParser = new PDFParser(this, 1);
+
 const Post = require("../models/Post");
 
 module.exports = {
@@ -10,10 +15,37 @@ module.exports = {
       //Grabbing just the posts of the logged-in user
       const posts = await Post.find({ user: req.user.id });
       //Sending post data from mongodb and user data to ejs template
-      res.render("profile.ejs", { posts: posts, user: req.user }); 
+      res.render("profile.ejs", { parsedText: '', user: req.user }); 
     } catch (err) {
       console.log(err);
     }
+  },
+  parsePDF: async (req, res) => {
+    let parsedText = ''
+    pdfParser.on("pdfParser_dataError", (errData) =>
+      console.error(errData.parserError)
+    );
+    pdfParser.on("pdfParser_dataReady", (pdfData) => {
+      console.log('received pdf')
+        fs.writeFile(
+          "parsed.json",
+          JSON.stringify(pdfData),
+          //pdfParser.getRawTextContent(),
+          function (err, result) {
+            console.log(err);
+          }
+        );
+      parsedText = JSON.stringify(pdfData)
+      //req.session.parsedData = { resparsedData: 'test session' };
+      console.log('generated json file')
+    });
+    await pdfParser.loadPDF(req.file.path)
+
+    //parsedText.
+    console.log(parsedText)
+
+
+    res.render("profile.ejs", { parsedTextOutput: parsedText }); 
   },
   getPost: async (req, res) => {
     try {

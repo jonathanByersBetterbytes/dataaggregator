@@ -1,0 +1,277 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Data Aggregator</title>
+		<link
+		  rel="icon"
+		  type="image/jpg"
+		  sizes="32x32"
+		  href="images/Strawser_Byers_Logo.jpg"
+		/>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+			<div id="wrapper" class="fade-in">
+
+				<!-- Intro -->
+					<div id="intro">
+						<h1>Hello, This Is <br />
+							Data Aggregator</h1>
+						<p>A Tool For Compiling Data From Multiple Sources.</p>
+						<ul class="actions">
+							<li><a href="#header" class="button icon solid solo fa-arrow-down scrolly">Continue</a></li>
+						</ul>
+					</div>
+
+				<!-- Header -->
+					<header id="header">
+						<a href="index.html" class="logo">Data Aggregator</a>
+					</header>
+
+				<!-- Nav -->
+					<nav id="nav">
+						<ul class="links">
+							<li class="active"><a href="index.html">This is Data Aggregator</a></li>
+							<!-- 
+							<li><a href="generic.html">Generic Page</a></li>
+							<li><a href="elements.html">Elements Reference</a></li> 
+							-->
+						</ul>
+						<ul class="icons">
+							<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+							<li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+							<li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+							<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
+						</ul>
+					</nav>
+
+				<!-- Main -->
+					<div id="main">
+
+						<!-- Featured Post -->
+							<article class="post featured">
+								<header class="major">
+									<span class="date">PDF Parser</span>
+									<h2><a href="#">Statement Upload</a></h2>
+									<input type="file" id="input_dom_element">
+									<!-- <div id="drop_dom_element">Drop files here</div> -->
+									<ul class="actions special">
+										<li><a href="#" class="button large">Output Results</a></li>
+									</ul>
+									<div style="font-size:10px;" id="my_file_output"></div>								
+								</header>
+							</article>
+					</div>
+
+
+<script>
+	// XLSX is a global from the standalone script
+	let jsonStmt
+	async function handleFileAsync(e) {
+		const file = e.target.files[0];
+		const data = await file.arrayBuffer();
+		/* data is an ArrayBuffer */
+		const workbook = XLSX.read(data);
+		const worksheet = workbook.Sheets['Sheet1']
+		jsonStmt = XLSX.utils.sheet_to_json(worksheet)
+		// const csvStmt = XLSX.utils.sheet_to_csv(worksheet)
+		//const txtStmt = XLSX.utils.sheet_to_txt(worksheet)
+		//const htmlStmt = XLSX.utils.sheet_to_html(worksheet)
+
+		// try {
+		// 	// bar.pdf in your static file server's root dir.
+		// 	const jsonPdf = pdf.genJson(data);
+		// 	console.log(jsonPdf)
+		// } catch (err) {
+		// 	console.error(err);
+		// }
+		
+		/* DO SOMETHING WITH workbook HERE */
+
+		// let firstChopIndx = jsonStmt.findIndex(elm => elm['Page '] === 'Opening Balance'); 	
+		jsonStmt.splice(0,437) // takes off the front filler to first account		
+		// // now make a copy of the array
+		let removeJsonSmnt = jsonStmt.slice('') // save current state
+		// chops just first page
+		let lastChopIndxForAccnt = jsonStmt.findIndex(elm => elm['711'] === 'Ending');
+		jsonStmt = jsonStmt.splice(0,lastChopIndxForAccnt) // takes off the back filler to get just transactions	
+
+		// chops next pages
+		removeJsonSmnt.splice(0,lastChopIndxForAccnt+1) // takes off this page from working state
+		jsonStmt = removeJsonSmnt.splice(0,248)  // copy of next page
+
+		// parse transactions for the account
+		let chopped = ''
+		let tabledAct = document.createElement('table')
+		let row = tabledAct.insertRow() // first row
+		let cell = row.insertCell()
+		cell.textContent = 'Date'
+		cell = row.insertCell()
+		cell.textContent = 'Description'
+		cell = row.insertCell()
+		cell.textContent = '__EMPTY'
+		cell = row.insertCell()
+		cell.textContent = '__EMPTY_1'
+		cell = row.insertCell()
+		cell.textContent = '__EMPTY_2'
+		cell = row.insertCell()
+		cell.textContent = '__EMPTY_3'
+		cell = row.insertCell()
+		cell.textContent = '__EMPTY_4'
+		cell = row.insertCell()
+		cell.textContent = '__EMPTY_5'
+		cell = row.insertCell()
+		cell.textContent = '__EMPTY_6'
+		cell = row.insertCell()
+		cell.textContent = '__EMPTY_7'
+	
+		let lb = false
+		let rowBrk = false
+		let lineItem = {}
+		let lineJSON = []
+		let column = 1
+		let started = false
+		jsonStmt.forEach((elm,i) => {
+			
+			if(!isDateValid(elm['1-800-521-6121'])) return  // have we found the start of transactions?
+			else started = true
+			row = tabledAct.insertRow()
+			cell = row.insertCell()  
+			cell.textContent = elm['1-800-521-6121']
+			
+			
+			// // go until you hit the next date
+			// for(let ii=i+1;!isDateValid(jsonStmt[ii]); ii++){
+			// 	cell = row.insertCell()  
+			// 	cell.textContent = elm['1-800-521-6121']
+			// }
+
+
+
+
+			return  // skip this first page
+			//chopped += elm['1-800-521-6121'] + (lb === true ? '\n' : '') // text in div
+			// build table row
+			row = tabledAct.insertRow()
+			cell = row.insertCell()  
+			cell.textContent = elm['1-800-521-6121']
+			cell = row.insertCell()  
+			cell.textContent = elm['711'] + ' ' + elm['Relay'] + ' ' + elm['Use']  // combine description
+			cell = row.insertCell()  
+			cell.textContent = elm['__EMPTY']
+			if(elm['__EMPTY_1']){
+				cell = row.insertCell()  
+				cell.textContent = elm['__EMPTY_1']
+			} 
+			if(elm['__EMPTY_2']){
+				cell = row.insertCell()  
+				cell.textContent = elm['__EMPTY_2']
+			} 
+			if(elm['__EMPTY_3']){
+				cell = row.insertCell()  
+				cell.textContent = elm['__EMPTY_3']
+			} 
+			if(elm['__EMPTY_4']){
+				cell = row.insertCell()  
+				cell.textContent = elm['__EMPTY_4']
+			} 
+			if(elm['__EMPTY_5']){
+				cell = row.insertCell()  
+				cell.textContent = elm['__EMPTY_5']
+			} 
+			if(elm['__EMPTY_6']){
+				cell = row.insertCell()  
+				cell.textContent = elm['__EMPTY_6']
+			} 
+			if(elm['__EMPTY_7']){
+				cell = row.insertCell()  
+				cell.textContent = elm['__EMPTY_7']
+			} 
+			
+		}); 
+
+		//my_file_output.innerText = chopped + 'END OF FIRST ACCOUNT!!!'
+		my_file_output.appendChild(tabledAct);  
+		//my_file_output.innerText = JSON.stringify(jsonStmt);  
+		console.log(jsonStmt)
+		// /* generate worksheet and workbook */
+		// const wsCleaned = XLSX.utils.json_to_sheet(lineJSON);
+		// const wbCleaned = XLSX.utils.book_new();
+		// XLSX.utils.book_append_sheet(wbCleaned, wsCleaned, "Filtered");
+		// XLSX.writeFile(wbCleaned, "Formated Statements.xlsx", { compression: true });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		// jsonStmt = removeJsonSmnt.slice('') // replentish for next account
+
+		// firstChopIndx = jsonStmt.findIndex(elm => elm['Page '] === 'Opening Balance'); 	
+		// if(firstChopIndx !== -1){
+		// 	jsonStmt.splice(0,firstChopIndx+1) // takes off the front filler to next account
+		// 	removeJsonSmnt = jsonStmt.slice('') // save current state		
+
+		// 	// process first account
+		// 	let lastChopIndxForAccnt = jsonStmt.findIndex(elm => elm['Page '] === 'Closing Balance');
+		// 	jsonStmt = jsonStmt.splice(0,lastChopIndxForAccnt) // takes off the back filler to get current account	
+		// 	removeJsonSmnt.splice(0,lastChopIndxForAccnt+1) // takes off this account from working state
+		// 	// parse transactions for the account
+		// 	jsonStmt.forEach((elm,i) => {
+		// 			my_file_output.innerText += JSON.stringify(elm) +'@@@@@@@'
+		// 			//console.log(elm)		
+		// 	}); 
+		// 	my_file_output.innerText += 'END OF SECOND ACCOUNT!!!'
+		// }
+
+	}
+
+	input_dom_element.addEventListener("change", handleFileAsync, false);
+
+function isDateValid(dateStr) {
+  return !isNaN(new Date(dateStr));
+}
+
+// async function handelDropAsync(e){
+// 	e.stopPropagation(); e.preventDefault();
+// 	console.log('Test')
+// 	const f = e.dataTransfer.files[0]
+
+// 	const data = await f.arrayBuffer()
+
+// 	const workbook = XLSX.read(data)
+// 	const worksheet = workbook.Sheets['Sheet1']
+// 	const jsonStmt = XLSX.utils.sheet_to_json(worksheet)
+// 	console.log(jsonStmt)
+// }
+// drop_dom_element.addEventListener('drop', handelDropAsync, false)
+	</script>
+
+	</body>
+</html>
