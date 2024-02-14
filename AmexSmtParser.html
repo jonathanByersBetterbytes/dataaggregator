@@ -72,14 +72,14 @@
 
 <script>
 	// XLSX is a global from the standalone script
-	let jsonStmt
+	
 	async function handleFileAsync(e) {
 		const file = e.target.files[0];
 		const data = await file.arrayBuffer();
 		/* data is an ArrayBuffer */
 		const workbook = XLSX.read(data);
 		const worksheet = workbook.Sheets['Sheet1']
-		jsonStmt = XLSX.utils.sheet_to_json(worksheet)
+		let jsonStmt = XLSX.utils.sheet_to_json(worksheet)
 		// const csvStmt = XLSX.utils.sheet_to_csv(worksheet)
 		//const txtStmt = XLSX.utils.sheet_to_txt(worksheet)
 		//const htmlStmt = XLSX.utils.sheet_to_html(worksheet)
@@ -93,7 +93,7 @@
 		// }
 		
 		/* DO SOMETHING WITH workbook HERE */
-
+		console.log(jsonStmt) 
 		// let firstChopIndx = jsonStmt.findIndex(elm => elm['Page '] === 'Opening Balance'); 	
 		jsonStmt.splice(0,437) // takes off the front filler to first account		
 		// // now make a copy of the array
@@ -103,8 +103,9 @@
 		jsonStmt = jsonStmt.splice(0,lastChopIndxForAccnt) // takes off the back filler to get just transactions	
 
 		// chops next pages
-		removeJsonSmnt.splice(0,lastChopIndxForAccnt+1) // takes off this page from working state
-		jsonStmt = removeJsonSmnt.splice(0,248)  // copy of next page
+		removeJsonSmnt.splice(0,lastChopIndxForAccnt+1) // takes off first page of transactions from working state
+		let jsonStmtLastPgs = removeJsonSmnt.splice(0,50000)  // copy of next page
+		
 
 		// parse transactions for the account
 		let chopped = ''
@@ -130,76 +131,166 @@
 		cell.textContent = '__EMPTY_6'
 		cell = row.insertCell()
 		cell.textContent = '__EMPTY_7'
+		cell = row.insertCell()
+		cell.textContent = '__EMPTY_8'
+		cell = row.insertCell()
+		cell.textContent = '__EMPTY_9'
+		cell = row.insertCell()
+		cell.textContent = '__EMPTY_10'
+		cell = row.insertCell()
+		cell.textContent = '__EMPTY_11'
+		cell = row.insertCell()
+		cell.textContent = '__EMPTY_12'
+		cell = row.insertCell()
+		cell.textContent = '__EMPTY_13'
 	
 		let lb = false
 		let rowBrk = false
-		let lineItem = {}
-		let lineJSON = [] 
+		let tranRows = {}, lineItem = {}, tranItems = {}
+		let lineJSON = []
 		let column = 1 
 		let started = false 
+
+		function firstLastPgs(pageJSON){
+
+		}
+			
 		jsonStmt.forEach((elm,i) => {
-			
-			if(!isDateValid(elm['1-800-521-6121'])) return  // have we found the start of transactions?
-			else started = true
-			row = tabledAct.insertRow()
-			cell = row.insertCell()  
-			cell.textContent = elm['1-800-521-6121']
-			
-			
-			// // go until you hit the next date
-			// for(let ii=i+1;!isDateValid(jsonStmt[ii]); ii++){
-			// 	cell = row.insertCell()  
-			// 	cell.textContent = elm['1-800-521-6121']
-			// }
 
-
-
-
-			return  // skip this first page
 			//chopped += elm['1-800-521-6121'] + (lb === true ? '\n' : '') // text in div
 			// build table row
 			row = tabledAct.insertRow()
+			// Date
 			cell = row.insertCell()  
 			cell.textContent = elm['1-800-521-6121']
+			lineItem['Date'] = elm['1-800-521-6121']
+			// Description
 			cell = row.insertCell()  
 			cell.textContent = elm['711'] + ' ' + elm['Relay'] + ' ' + elm['Use']  // combine description
+			lineItem['Description'] = elm['711'] + ' ' + elm['Relay'] + ' ' + elm['Use']
+			// ''''
 			cell = row.insertCell()  
 			cell.textContent = elm['__EMPTY']
+			lineItem['Description'] += ' ' + elm['__EMPTY']
+
 			if(elm['__EMPTY_1']){
 				cell = row.insertCell()  
 				cell.textContent = elm['__EMPTY_1']
+				if(elm['__EMPTY_1'].indexOf('$') != -1) lineItem['Amount'] =  elm['__EMPTY_1']
+				else lineItem['Description'] += ' ' + elm['__EMPTY_1']
 			} 
 			if(elm['__EMPTY_2']){
 				cell = row.insertCell()  
 				cell.textContent = elm['__EMPTY_2']
+				if(elm['__EMPTY_2'].indexOf('$') != -1) lineItem['Amount'] =  elm['__EMPTY_2']
+				else lineItem['Description'] += ' ' + elm['__EMPTY_2']
 			} 
 			if(elm['__EMPTY_3']){
 				cell = row.insertCell()  
 				cell.textContent = elm['__EMPTY_3']
+				if(elm['__EMPTY_3'].indexOf('$') != -1) lineItem['Amount'] =  elm['__EMPTY_3']
+				else lineItem['Description'] += ' ' + elm['__EMPTY_3']
 			} 
 			if(elm['__EMPTY_4']){
 				cell = row.insertCell()  
-				cell.textContent = elm['__EMPTY_4']
+				cell.textContent = elm['__EMPTY_4']				
+				if(elm['__EMPTY_4'].indexOf('$') != -1) lineItem['Amount'] =  elm['__EMPTY_4']
+				else lineItem['Description'] += ' ' + elm['__EMPTY_4']
 			} 
 			if(elm['__EMPTY_5']){
 				cell = row.insertCell()  
-				cell.textContent = elm['__EMPTY_5']
+				cell.textContent = elm['__EMPTY_5']		
+				if(elm['__EMPTY_5'].indexOf('$') != -1) lineItem['Amount'] =  elm['__EMPTY_5']
+				else lineItem['Description'] += ' ' + elm['__EMPTY_5']
 			} 
 			if(elm['__EMPTY_6']){
 				cell = row.insertCell()  
-				cell.textContent = elm['__EMPTY_6']
+				cell.textContent = elm['__EMPTY_6']		
+				if(elm['__EMPTY_6'].indexOf('$') != -1) lineItem['Amount'] =  elm['__EMPTY_6']
+				else lineItem['Description'] += ' ' + elm['__EMPTY_6']
 			} 
 			if(elm['__EMPTY_7']){
 				cell = row.insertCell()  
-				cell.textContent = elm['__EMPTY_7']
+				cell.textContent = elm['__EMPTY_7']		
+				if(elm['__EMPTY_7'].indexOf('$') != -1) lineItem['Amount'] =  elm['__EMPTY_7']
+				else lineItem['Description'] += ' ' + elm['__EMPTY_7']
 			} 
-			
+			if(elm['__EMPTY_8']){
+				cell = row.insertCell()  
+				cell.textContent = elm['__EMPTY_8']		
+				if(elm['__EMPTY_8'].indexOf('$') != -1) lineItem['Amount'] =  elm['__EMPTY_8']
+				else lineItem['Description'] += ' ' + elm['__EMPTY_8']
+			} 
+			if(elm['__EMPTY_9']){
+				cell = row.insertCell()  
+				cell.textContent = elm['__EMPTY_9']		
+				if(elm['__EMPTY_9'].indexOf('$') != -1) lineItem['Amount'] =  elm['__EMPTY_9']
+				else lineItem['Description'] += ' ' + elm['__EMPTY_9']
+			} 
+			if(elm['__EMPTY_10']){
+				cell = row.insertCell()  
+				cell.textContent = elm['__EMPTY_10']		
+				if(elm['__EMPTY_10'].indexOf('$') != -1) lineItem['Amount'] =  elm['__EMPTY_10']
+				else 
+				lineItem['Description'] += ' ' + elm['__EMPTY_10']
+			} 
+			if(elm['__EMPTY_11']){
+				cell = row.insertCell()  
+				cell.textContent = elm['__EMPTY_11']		
+				if(elm['__EMPTY_11'].indexOf('$') != -1) lineItem['Amount'] =  elm['__EMPTY_11']
+				else lineItem['Description'] += ' ' + elm['__EMPTY_11']
+			} 
+			if(elm['__EMPTY_12']){
+				cell = row.insertCell()  
+				cell.textContent = elm['__EMPTY_12']		
+				if(elm['__EMPTY_12'].indexOf('$') != -1) lineItem['Amount'] =  elm['__EMPTY_12']
+				else lineItem['Description'] += ' ' + elm['__EMPTY_12']
+			} 
+			//lineJSON.push(lineItem)
+			lineItem = {}
 		}); 
 
+		// process last pages
+		function middlePgs(midPgs){
+
+		}
+		// get an array of the unique rowNums by checking for a date
+		tranRows = jsonStmtLastPgs.filter(elm => isDateValid(elm['1-800-521-6121'])) 		
+		// loop through all dates items data, nest a loop for the array passed and 
+		tranRows.forEach((dtRow,i) => {
+			jsonStmtLastPgs.forEach((jsonRow,j) => {
+				// match if tranRows[i]['__rowNum__'] === jsonStmt[j]['__rowNum__'] 
+				if(started || dtRow['__rowNum__'] === jsonRow['__rowNum__']){
+					// gather all details of that transaction until you get to the next date's tranRows[i+1]['__rowNum__'] 
+					//console.log('inside loop'+dtRow['__rowNum__'] !== jsonRow['__rowNum__'])  
+					if(!started){
+						started = true
+						lineItem['Date'] = jsonRow['1-800-521-6121']
+						lineItem['Description'] = ''
+					}else{		
+						//if(jsonRow['1-800-521-6121'] === '') return				
+						lineItem['Description'] += ' ' + jsonRow['1-800-521-6121']
+					}
+					//console.log(jsonRow['1-800-521-6121']) 
+					if(jsonRow['Use']){ // this is the end
+						lineItem['Amount'] = jsonRow['Use']
+						lineItem['Description'] = lineItem['Description'].trim()
+						//console.log(lineItem)
+						//if(jsonRow['Use'] !== 'Account') lineJSON.push(lineItem)
+						started = false
+						lineItem = {}
+						return
+					}
+				}										
+			})
+		})
+
 		//my_file_output.innerText = chopped + 'END OF FIRST ACCOUNT!!!'
-		my_file_output.appendChild(tabledAct);  
+		//my_file_output.appendChild(tabledAct);  
 		//my_file_output.innerText = JSON.stringify(jsonStmt);  
-		console.log(jsonStmt)
+
+		//console.log(lineJSON)
+
 		// /* generate worksheet and workbook */
 		// const wsCleaned = XLSX.utils.json_to_sheet(lineJSON);
 		// const wbCleaned = XLSX.utils.book_new();
@@ -255,7 +346,8 @@
 	input_dom_element.addEventListener("change", handleFileAsync, false);
 
 function isDateValid(dateStr) {
-  return !isNaN(new Date(dateStr));
+	if(dateStr.length !== 8 || dateStr.indexOf('/') === -1) return false  // checking for rouge numbers in description that give false positive dates
+  	return !isNaN(new Date(dateStr));
 }
 
 // async function handelDropAsync(e){

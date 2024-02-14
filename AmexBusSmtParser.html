@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Data Aggregator</title>
+		<link
+		  rel="icon"
+		  type="image/jpg"
+		  sizes="32x32"
+		  href="images/Strawser_Byers_Logo.jpg"
+		/>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+			<div id="wrapper" class="fade-in">
+
+				<!-- Intro -->
+					<div id="intro">
+						<h1>Hello, This Is <br />
+							Data Aggregator</h1>
+						<p>A Tool For Compiling Data From Multiple Sources.</p>
+						<ul class="actions">
+							<li><a href="#header" class="button icon solid solo fa-arrow-down scrolly">Continue</a></li>
+						</ul>
+					</div>
+
+				<!-- Header -->
+					<header id="header">
+						<a href="index.html" class="logo">Data Aggregator</a>
+					</header>
+
+				<!-- Nav -->
+					<nav id="nav">
+						<ul class="links">
+							<li class="active"><a href="index.html">This is Data Aggregator</a></li>
+							<!-- 
+							<li><a href="generic.html">Generic Page</a></li>
+							<li><a href="elements.html">Elements Reference</a></li> 
+							-->
+						</ul>
+						<ul class="icons">
+							<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+							<li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+							<li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+							<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
+						</ul>
+					</nav>
+
+				<!-- Main -->
+					<div id="main">
+
+						<!-- Featured Post -->
+							<article class="post featured">
+								<header class="major">
+									<span class="date">PDF Parser</span>
+									<h2><a href="#">Statement Upload</a></h2>
+									<input type="file" id="input_dom_element">
+									<!-- <div id="drop_dom_element">Drop files here</div> -->
+									<ul class="actions special">
+										<li><a href="#" class="button large">Output Results</a></li>
+									</ul>
+									<div style="font-size:10px;" id="my_file_output"></div>								
+								</header>
+							</article>
+					</div>
+
+
+<script>
+	// XLSX is a global from the standalone script
+	
+	async function handleFileAsync(e) {
+		const file = e.target.files[0];
+		const data = await file.arrayBuffer();
+		/* data is an ArrayBuffer */
+		const workbook = XLSX.read(data);
+		const worksheet = workbook.Sheets['Sheet1']
+		let jsonStmt = XLSX.utils.sheet_to_json(worksheet)		
+		/* DO SOMETHING WITH workbook HERE */
+		let firstChopIndx = jsonStmt.findIndex(elm => elm['__EMPTY_1'] === '1-623-492-7719')
+		jsonStmt.splice(0,firstChopIndx+2) // takes off the front filler to first account	
+		// chops just first page
+		let lastChopIndxForAccnt = jsonStmt.findIndex(elm => elm['711'] === 'interest');
+		jsonStmt = jsonStmt.splice(0,lastChopIndxForAccnt) // takes off the back filler to get just transactions
+		let tranRows = {}, lineItem = {}
+		let lineJSON = []
+		let started = false 
+		function parseEmptys711(pageJSON){
+			pageJSON.forEach((elm,i) => {
+				if(elm['711']){ // check for normal formating
+					// Date
+					if(!isDateValid(elm['1-800-521-6121'].replaceAll('*',''))) return
+					lineItem['Date'] = elm['1-800-521-6121']
+					// Description
+					lineItem['Description'] = elm['711'] + ' ' + elm['Relay'] + ' ' + elm['Use'] + ' ' + elm['__EMPTY']// combine description
+					// loop through empties
+					for(let i=1;elm['__EMPTY_'+i];i++){
+						if(elm['__EMPTY_'+i].indexOf('$') != -1) lineItem['Amount'] =  elm['__EMPTY_'+i] // is amount
+						else if(elm['__EMPTY_'+i] === 'Total') break // check for last page
+						else lineItem['Description'] += ' ' + elm['__EMPTY_'+i]
+					} 
+					if(lineItem['Description'].indexOf('Ending Account') === -1 
+						&& lineItem['Description'].indexOf('undefined') === -1) 
+							lineJSON.push(lineItem)
+					lineItem = {}
+				} 
+			}); 		
+		}
+		// process oddly formated pages
+		function parseOddFormat(pageJSON){
+			// filter out only odd formating
+			tranRows = pageJSON.filter(elm => !elm['711'])
+			// get an array of the unique rowNums by checking for a date
+			tranRows = tranRows.filter(elm => isDateValid(elm['1-800-521-6121'])) 		
+			// loop through all dates items data, nest a loop for the array passed and 
+			tranRows.forEach((dtRow,i) => {
+				pageJSON.forEach((jsonRow,j) => {
+					// match if tranRows[i]['__rowNum__'] === jsonStmt[j]['__rowNum__'] 
+					if(started || dtRow['__rowNum__'] === jsonRow['__rowNum__']){
+						// gather all details of that transaction until you get to the next date's tranRows[i+1]['__rowNum__'] 
+						if(!started){
+							started = true
+							lineItem['Date'] = jsonRow['1-800-521-6121']
+							lineItem['Description'] = ''
+						}else{		
+							//if(jsonRow['1-800-521-6121'] === '') return				
+							lineItem['Description'] += ' ' + jsonRow['1-800-521-6121']
+						}
+						//console.log(jsonRow['1-800-521-6121']) 
+						if(jsonRow['Use']){ // this is the end
+							lineItem['Amount'] = jsonRow['Use']
+							lineItem['Description'] = lineItem['Description'].trim()
+							//console.log(lineItem)
+							if(jsonRow['Use'] !== 'Account') lineJSON.push(lineItem)
+							started = false
+							lineItem = {}
+							return
+						}
+					}										
+				})
+			})
+		}
+		// loop through and parse according to format
+		parseEmptys711(jsonStmt)
+		// loop through and parse according to format
+		parseOddFormat(jsonStmt)
+		//my_file_output.innerText = chopped + 'END OF FIRST ACCOUNT!!!'
+		//my_file_output.appendChild(tabledAct);  
+		console.log(lineJSON)
+		// generate worksheet and workbook 
+		const wsCleaned = XLSX.utils.json_to_sheet(lineJSON);
+		const wbCleaned = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(wbCleaned, wsCleaned, "Filtered");
+		XLSX.writeFile(wbCleaned, "parsedTransactions.xlsx", { compression: true });
+	}
+	input_dom_element.addEventListener("change", handleFileAsync, false);
+
+function isDateValid(dateStr) {
+	if(dateStr.length !== 8 || dateStr.indexOf('/') === -1) return false  // checking for rouge numbers in description that give false positive dates
+  	return !isNaN(new Date(dateStr));
+}
+
+	</script>
+
+	</body>
+</html>
