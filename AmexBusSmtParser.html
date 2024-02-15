@@ -75,6 +75,7 @@
 	
 	async function handleFileAsync(e) {
 		const file = e.target.files[0];
+		
 		const data = await file.arrayBuffer();
 		/* data is an ArrayBuffer */
 		const workbook = XLSX.read(data);
@@ -85,27 +86,25 @@
 		jsonStmt.splice(0,firstChopIndx+2) // takes off the front filler to first account	
 		// chops just first page
 		let lastChopIndxForAccnt = jsonStmt.findIndex(elm => elm['711'] === 'interest');
+		if(lastChopIndxForAccnt === -1) lastChopIndxForAccnt = jsonStmt.findIndex(elm => elm['1-800-521-6121'] === 'interest');
 		jsonStmt = jsonStmt.splice(0,lastChopIndxForAccnt) // takes off the back filler to get just transactions
 		let tranRows = {}, lineItem = {}
 		let lineJSON = []
 		let started = false 
+		console.log(jsonStmt)
 		function parseEmptys711(pageJSON){
 			pageJSON.forEach((elm,i) => {
 				if(elm['711']){ // check for normal formating
-					// Date
-					if(!isDateValid(elm['1-800-521-6121'].replaceAll('*',''))) return
-					lineItem['Date'] = elm['1-800-521-6121']
-					// Description
-					lineItem['Description'] = elm['711'] + ' ' + elm['Relay'] + ' ' + elm['Use'] + ' ' + elm['__EMPTY']// combine description
-					// loop through empties
+					lineItem['Date'] = isDateValid(elm['1-800-521-6121'])
+					if(!lineItem['Date']) return
+					lineItem['Description'] = elm['Use'] + ' ' + elm['Relay'] + ' ' + elm['711'] + ' ' + elm['__EMPTY'] // combine description
 					for(let i=1;elm['__EMPTY_'+i];i++){
 						if(elm['__EMPTY_'+i].indexOf('$') != -1) lineItem['Amount'] =  elm['__EMPTY_'+i] // is amount
 						else if(elm['__EMPTY_'+i] === 'Total') break // check for last page
 						else lineItem['Description'] += ' ' + elm['__EMPTY_'+i]
-					} 
-					if(lineItem['Description'].indexOf('Ending Account') === -1 
-						&& lineItem['Description'].indexOf('undefined') === -1) 
-							lineJSON.push(lineItem)
+					}
+					lineItem['Description'] = scrubDescrption(lineItem['Description']) // returns false if to skip	
+					if(lineItem['Description']) lineJSON.push(lineItem)
 					lineItem = {}
 				} 
 			}); 		
@@ -124,18 +123,16 @@
 						// gather all details of that transaction until you get to the next date's tranRows[i+1]['__rowNum__'] 
 						if(!started){
 							started = true
-							lineItem['Date'] = jsonRow['1-800-521-6121']
-							lineItem['Description'] = ''
-						}else{		
-							//if(jsonRow['1-800-521-6121'] === '') return				
+							lineItem['Date'] = isDateValid(jsonRow['1-800-521-6121'])
+							lineItem['Description'] = '' // initialize
+						}else{				
 							lineItem['Description'] += ' ' + jsonRow['1-800-521-6121']
 						}
-						//console.log(jsonRow['1-800-521-6121']) 
+						//console.log(jsonRow['1-800-521-6121']) 						
 						if(jsonRow['Use']){ // this is the end
 							lineItem['Amount'] = jsonRow['Use']
-							lineItem['Description'] = lineItem['Description'].trim()
-							//console.log(lineItem)
-							if(jsonRow['Use'] !== 'Account') lineJSON.push(lineItem)
+							lineItem['Description'] = scrubDescrption(lineItem['Description']) // returns false if to skip		
+							if(lineItem['Description'] && jsonRow['Use'] !== 'Account') lineJSON.push(lineItem)
 							started = false
 							lineItem = {}
 							return
@@ -152,16 +149,38 @@
 		//my_file_output.appendChild(tabledAct);  
 		console.log(lineJSON)
 		// generate worksheet and workbook 
-		const wsCleaned = XLSX.utils.json_to_sheet(lineJSON);
-		const wbCleaned = XLSX.utils.book_new();
-		XLSX.utils.book_append_sheet(wbCleaned, wsCleaned, "Filtered");
-		XLSX.writeFile(wbCleaned, "parsedTransactions.xlsx", { compression: true });
+		const ws = XLSX.utils.json_to_sheet(lineJSON);
+		const wb = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(wb, ws, "Filtered");
+		for(let i=2;ws['C'+i];i++){
+			ws['A'+i].t = 'd';
+			ws['C'+i].v = ws['C'+i].v.replaceAll('$','').replaceAll(',','');
+			ws['C'+i].t = 'n';
+			ws['C'+i].z = '"$"#,##0.00_);\\("$"#,##0.00\\)'
+			//console.log(ws['C'+i])
+		}
+		XLSX.writeFile(wb, "parsedTransactions.xlsx", { compression: true });
 	}
 	input_dom_element.addEventListener("change", handleFileAsync, false);
 
 function isDateValid(dateStr) {
+	dateStr = dateStr.replaceAll('*','')
 	if(dateStr.length !== 8 || dateStr.indexOf('/') === -1) return false  // checking for rouge numbers in description that give false positive dates
-  	return !isNaN(new Date(dateStr));
+  	return !isNaN(new Date(dateStr)) ? dateStr : false;
+}
+function scrubDescrption(desc){
+	//chop end of page text
+	if(desc.indexOf(' p. ') !== -1)  desc = desc.substring(0,desc.indexOf(' p. '))
+	desc = desc.trim()
+	if(desc.indexOf('00000000 LODGING') != -1 && 10 > desc.indexOf('00000000 LODGING')) return false  // hotel stays have multiple dates, skip them
+	desc = desc.replaceAll('To: Carrier: Class: ', '')
+	desc = desc.replaceAll('HARTSFIELD', 'HARTSFIELD To:')
+	
+	// flag for skip line
+	if(desc.indexOf('Ending Account') === -1 
+		&& desc.indexOf('undefined') === -1 
+			&& desc.indexOf('Account Ending') === -1) 
+				return desc
 }
 
 	</script>
