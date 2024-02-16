@@ -78,8 +78,8 @@ app.listen(process.env.PORT, () => {
 async function pdfExcel() {
   try {
     await pdf2excel.genXlsx('statements/2024.02.16-Statements/Wells_Fargo-Joint_Personal_Checking/2021.01.31.pdf', 'statements/2024.02.16-Statements/Wells_Fargo-Joint_Personal_Checking/2021.01.31.xlsx');
-    console.log("Generated Excel2!");
-  } catch (err) {
+    console.log("Generated Excel!");
+  } catch (err) { 
     console.error(err);
   } 
 }
