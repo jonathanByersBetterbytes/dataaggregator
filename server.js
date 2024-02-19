@@ -70,18 +70,30 @@ app.use("/post", postRoutes);
 app.listen(process.env.PORT, () => {
   console.log("Server is running, you better catch it!");
 
-  pdfExcel()
+  //loopPDFFiles()
+  //processExcelFiles()
   //processExcel()
   //pdfToJson()
+  pdfToJson()
 });
 
-async function pdfExcel() {
-  try {
-    await pdf2excel.genXlsx('statements/2024.02.16-Statements/Wells_Fargo-Joint_Personal_Checking/2021.01.31.pdf', 'statements/2024.02.16-Statements/Wells_Fargo-Joint_Personal_Checking/2021.01.31.xlsx');
-    console.log("Generated Excel!");
-  } catch (err) { 
-    console.error(err);
-  } 
+function loopFiles(){
+  fs.readdir('statements',(err,files) => {
+    if(err) console.log(err)
+    files.forEach((file, index) => {
+      //if(index > 0) return
+      console.log('Got file:' + file)
+      pdfExcel(file)
+    })
+  })
+}
+async function pdfExcel(file) {
+    try {
+      await pdf2excel.genXlsx('statements/'+file, 'statements/'+file.replaceAll('.pdf','.xlsx'));
+      console.log("Generated Excel!");
+    } catch (err) { 
+      console.error(err);
+    }      
 }
 let pdfParser = new PDFParser(this, 1);
 //pdfToJson()
@@ -89,25 +101,37 @@ function pdfToJson() {
   pdfParser.on("pdfParser_dataError", (errData) =>
     console.error(errData.parserError)
   );
-  pdfParser.on("pdfParser_dataReady", (pdfData) => {
+  pdfParser.on("pdfParser_dataReady", pdfData => {
     console.log('received pdf')
-    fs.writeFile(
-      "parsed.json",
-      //JSON.stringify(pdfData),
-      pdfParser.getRawTextContent(),
-      function (err, result) {
-        console.log(err);
-      }
-    );
-    console.log(JSON.parse(pdfParser.getRawTextContent()))
-    console.log('generated json file')
+    const raw = pdfParser.getRawTextContent().replace(/\r\n/g,' ')
+    // fs.writeFile(
+    //   "statements/2021.01.31.json",
+    //   JSON.stringify(pdfData),
+    //   pdfParser.getRawTextContent(),
+    //   function (err, result) {
+    //     console.log(err);
+    //   }
+    // );
+    //console.log(JSON.parse(pdfParser.getRawTextContent().replaceAll('Crown Banking®','')))
+    console.log(raw)
+    console.log('generated json')
   });
-  pdfParser.loadPDF("statement.pdf")
+  pdfParser.loadPDF("statements/2021.01.31.pdf")
 }
 
-function processExcel (){
+function processExcelFiles(){
+  fs.readdir('statements',(err,files) => {
+    if(err) console.log(err)
+    files.forEach((file, index) => {
+      //if(index > 0) return
+      console.log('Got file:' + file)
+      pdfExcel(file)
+    })
+  })
+}
+function processExcel(){
   //const workbook = XLSX.readFile('bar2.xlsx')
-  const workbook = XLSX.readFile('scores.xlsx')
+  const workbook = XLSX.readFile('statements/2021.01.31.xlsx')
   const worksheet = workbook.Sheets['Sheet1']
 
   const jsonStmt = XLSX.utils.sheet_to_json(worksheet)
