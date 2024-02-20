@@ -85,12 +85,13 @@
 		
 		let cleanedJSON = []
 		
+		console.log(jsonStmt)
 		for(elm in jsonStmt){
 			let lineItem = {}
-			lineItem['Date'] = jsonStmt[elm].Date
+			lineItem['Date'] = jsonStmt[elm].Date+'/2021'
 			lineItem['Description'] = ''
 			if(isNaN(Number(jsonStmt[elm].Number))) lineItem['Description'] = jsonStmt[elm].Number
-			else lineItem['Check#'] = jsonStmt[elm].Number
+			else lineItem['Check #'] = jsonStmt[elm].Number
 			
 			if(isNaN(Number(jsonStmt[elm].Description.replaceAll(',','')))){
 				lineItem['Description'] += jsonStmt[elm].Description
@@ -101,22 +102,32 @@
 				if(jsonStmt[elm]['balance'] && !isNaN(Number(jsonStmt[elm].Subtractions.replaceAll(',','')))) lineItem['Amount'] = jsonStmt[elm].Subtractions
 
 			}else lineItem['Amount'] = jsonStmt[elm].Description // if description is amount skip other cols
+			lineItem['Amount'] = +lineItem['Amount'].replaceAll(',','') // make a number
+			if(lineItem.Description.indexOf('Accenture, LLP Payrll Dep') === -1
+				&& lineItem.Description.indexOf('Bill Pay Payment Return') === -1
+				&& lineItem.Description.indexOf('Online Transfer From Barringer C Savings') === -1
+				&& lineItem.Description.indexOf('Tele-Transfer Fr Checking') === -1
+				&& lineItem.Description.indexOf('Interest Payment') === -1
+				&& lineItem.Description.indexOf('Online Transfer From Barringer C Savings') === -1
+				&& lineItem.Description.indexOf('Edeposit IN Branch/Store') === -1){
+				lineItem['Amount'] = -lineItem['Amount']  // make a debit
+			}
 			cleanedJSON.push(lineItem)
 		}
 
 		console.log(cleanedJSON)
 		// generate worksheet and workbook 
-		// const ws = XLSX.utils.json_to_sheet(lineJSON);
-		// const wb = XLSX.utils.book_new();
-		// XLSX.utils.book_append_sheet(wb, ws, "Filtered");
-		// for(let i=2;ws['C'+i];i++){
-		// 	ws['A'+i].t = 'd';
-		// 	ws['C'+i].v = ws['C'+i].v.replaceAll('$','').replaceAll(',','');
-		// 	ws['C'+i].t = 'n';
-		// 	ws['C'+i].z = '"$"#,##0.00_);\\("$"#,##0.00\\)'
-		// 	//console.log(ws['C'+i])
-		// }
-		// XLSX.writeFile(wb, "parsedTransactions.xlsx", { compression: true });
+		const ws = XLSX.utils.json_to_sheet(cleanedJSON);
+		const wb = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(wb, ws, "Filtered");
+		for(let i=2;ws['C'+i];i++){
+			ws['A'+i].t = 'd';
+			//ws['C'+i].v = ws['C'+i].v.replaceAll('$','').replaceAll(',','');
+			ws['C'+i].t = 'n';
+			ws['C'+i].z = '"$"#,##0.00_);\\("$"#,##0.00\\)'
+			//console.log(ws['C'+i])
+		}
+		XLSX.writeFile(wb, "parsedTransactions.xlsx", { compression: true });
 	}
 	input_dom_element.addEventListener("change", handleFileAsync, false);
 
