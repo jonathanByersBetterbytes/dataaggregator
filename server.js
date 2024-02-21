@@ -70,7 +70,7 @@ app.use("/post", postRoutes);
 app.listen(process.env.PORT, () => {
   console.log("Server is running, you better catch it!");
 
-  loopPDFFiles()
+  //loopPDFFiles()
   //processExcelFiles()
   //processExcel()
   //pdfToJson()
@@ -131,7 +131,7 @@ function processExcelFiles(){
 }
 function processExcel(){
   //const workbook = XLSX.readFile('bar2.xlsx')
-  const workbook = XLSX.readFile('statements/2021.01.31.xlsx')
+  const workbook = XLSX.readFile('statements/2023_Wells_Checking_Trans.xlsx')
   const worksheet = workbook.Sheets['Sheet1']
 
   const jsonStmt = XLSX.utils.sheet_to_json(worksheet)

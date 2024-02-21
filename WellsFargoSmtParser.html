@@ -88,30 +88,51 @@
 		console.log(jsonStmt)
 		for(elm in jsonStmt){
 			let lineItem = {}
-			lineItem['Date'] = jsonStmt[elm].Date+'/2021'
+			lineItem['Date'] = jsonStmt[elm].Date+'/2024'
 			lineItem['Description'] = ''
+			// if it's a number next then it's a check #
 			if(isNaN(Number(jsonStmt[elm].Number))) lineItem['Description'] = jsonStmt[elm].Number
 			else lineItem['Check #'] = jsonStmt[elm].Number
 			
-			if(isNaN(Number(jsonStmt[elm].Description.replaceAll(',','')))){
-				lineItem['Description'] += jsonStmt[elm].Description
-				
-				if(jsonStmt[elm]['Additions'] && !isNaN(Number(jsonStmt[elm].Additions.replaceAll(',','')))) lineItem['Amount'] = jsonStmt[elm].Additions
-
+			if(!isAmountValid(jsonStmt[elm].Description)){  // if it's not a number then it's a description
+				lineItem['Description'] += ' ' + jsonStmt[elm].Description
+				//jsonStmt[elm].Subtractions = jsonStmt[elm].Subtractions.trim()
+				if(jsonStmt[elm]['Additions'] && isAmountValid(jsonStmt[elm].Additions)){
+					lineItem['Amount'] = jsonStmt[elm].Additions
+					//console.log('Additions: ' + jsonStmt[elm]['Additions'])
+				} 
+				else if(jsonStmt[elm]['Subtractions'] && isAmountValid(jsonStmt[elm].Subtractions)){
+					lineItem['Amount'] = jsonStmt[elm].Subtractions
+				//console.log('Subtractions: ' + jsonStmt[elm]['Subtractions'])
+				} 
 				// not sure about Comenitycard Pay Check Pymt adding a 0005 to amount
-				if(jsonStmt[elm]['balance'] && !isNaN(Number(jsonStmt[elm].Subtractions.replaceAll(',','')))) lineItem['Amount'] = jsonStmt[elm].Subtractions
-
+				// balance starts back up and description can be blank
+				if(!lineItem['Amount'] && jsonStmt[elm]['balance'] && isAmountValid(jsonStmt[elm].Subtractions)) lineItem['Amount'] = jsonStmt[elm].Subtractions
+				else if(!lineItem['Amount'] && jsonStmt[elm]['balance'] && isAmountValid(jsonStmt[elm].balance)) lineItem['Amount'] = jsonStmt[elm].balance
+				//11/16	Wire Trans Svc Charge - Sequence: 211116151347 Srf#	US01320Ku0610031 Trn#211116151347 Rfb#	W510847Dom211116	 	15.00
+				//console.log('Amount: ' + lineItem['Amount'])
 			}else lineItem['Amount'] = jsonStmt[elm].Description // if description is amount skip other cols
-			lineItem['Amount'] = +lineItem['Amount'].replaceAll(',','') // make a number
+			lineItem.Description = lineItem.Description.trim()
+			if(lineItem['Amount']) lineItem['Amount'] = isAmountValid(lineItem['Amount']) // make a number
 			if(lineItem.Description.indexOf('Accenture, LLP Payrll Dep') === -1
 				&& lineItem.Description.indexOf('Bill Pay Payment Return') === -1
-				&& lineItem.Description.indexOf('Online Transfer From Barringer C Savings') === -1
+				&& lineItem.Description.indexOf('Online Transfer From Barringer') === -1
 				&& lineItem.Description.indexOf('Tele-Transfer Fr Checking') === -1
 				&& lineItem.Description.indexOf('Interest Payment') === -1
-				&& lineItem.Description.indexOf('Online Transfer From Barringer C Savings') === -1
-				&& lineItem.Description.indexOf('Edeposit IN Branch/Store') === -1){
+				&& lineItem.Description.indexOf('Webrus33') === -1
+				&& lineItem.Description.indexOf('Edeposit IN Branch/Store') === -1
+				&& lineItem.Description.indexOf('24Petwatch Petinsu') === -1
+				&& lineItem.Description.indexOf('Reverse Zelle to') === -1
+				&& lineItem.Description.indexOf('Overdraft Xfer From Credit') === -1
+				&& lineItem.Description.indexOf('Online Transfer From') === -1
+				&& lineItem.Description.indexOf('ACH Claim#') === -1
+				&& lineItem.Description.indexOf('Purchase Return authorized') === -1
+				&& lineItem.Description.indexOf('WT Fed#') === -1
+				&& lineItem.Description.indexOf('Deposit') === -1
+				&& lineItem.Description.indexOf('Zelle From') === -1
+				&& lineItem.Description.indexOf('Deposit Made In A Branch/Store') === -1){
 				lineItem['Amount'] = -lineItem['Amount']  // make a debit
-			}
+			}//
 			cleanedJSON.push(lineItem)
 		}
 
@@ -131,10 +152,18 @@
 	}
 	input_dom_element.addEventListener("change", handleFileAsync, false);
 
-function isDateValid(dateStr) {
+	function isDateValid(dateStr) {
 	dateStr = dateStr.replaceAll('*','')
 	if(dateStr.length !== 8 || dateStr.indexOf('/') === -1) return false  // checking for rouge numbers in description that give false positive dates
   	return !isNaN(new Date(dateStr)) ? dateStr : false;
+}
+function isAmountValid(amountStr) {
+	if(!amountStr || amountStr.trim() === '') return false
+	amountStr = amountStr.replaceAll(',','')
+	// could use:  || amountStr.length > 11 also
+	// {"Date": "3/3/2021",    "Number": "Payment for Amz Storecard 030121 xxxxx0635 N", "Description": "6045781133187665", "Additions": "546.34", "Subtractions": "21,931.38"}
+	if(amountStr.indexOf('.') === -1) return false  // checking for rouge numbers in description that give false positive 
+  	return !isNaN(Number(amountStr)) ? Number(amountStr) : false;
 }
 function scrubDescrption(desc){
 	//chop end of page text
