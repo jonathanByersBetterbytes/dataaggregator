@@ -27,7 +27,7 @@ module.exports = {
     let activity = '['
     pdfParser.on("pdfParser_dataError", (errData) =>
       console.error(errData.parserError)
-    );
+    ); 
     pdfParser.on("pdfParser_dataReady", (pdfData) => {
       console.log('received pdf')
       try{
