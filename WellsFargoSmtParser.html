@@ -88,7 +88,7 @@
 		console.log(jsonStmt)
 		for(elm in jsonStmt){
 			let lineItem = {}
-			lineItem['Date'] = jsonStmt[elm].Date+'/2024'
+			lineItem['Date'] = jsonStmt[elm].Date+'/2023'
 			lineItem['Description'] = ''
 			// if it's a number next then it's a check #
 			if(isNaN(Number(jsonStmt[elm].Number))) lineItem['Description'] = jsonStmt[elm].Number
@@ -120,7 +120,7 @@
 				&& lineItem.Description.indexOf('Tele-Transfer Fr Checking') === -1
 				&& lineItem.Description.indexOf('Interest Payment') === -1
 				&& lineItem.Description.indexOf('Webrus33') === -1
-				&& lineItem.Description.indexOf('Edeposit IN Branch/Store') === -1
+				&& lineItem.Description.indexOf('Edeposit IN Branch') === -1
 				&& lineItem.Description.indexOf('24Petwatch Petinsu') === -1
 				&& lineItem.Description.indexOf('Reverse Zelle to') === -1
 				&& lineItem.Description.indexOf('Overdraft Xfer From Credit') === -1
@@ -130,7 +130,9 @@
 				&& lineItem.Description.indexOf('WT Fed#') === -1
 				&& lineItem.Description.indexOf('Deposit') === -1
 				&& lineItem.Description.indexOf('Zelle From') === -1
-				&& lineItem.Description.indexOf('Deposit Made In A Branch/Store') === -1){
+				&& lineItem.Description.indexOf('Overdraft Xfer From Credit') === -1
+				&& lineItem.Description.indexOf('Deposit Made In A Branch/Store') === -1
+				|| lineItem.Description === 'Deposited OR Cashed Check'){
 				lineItem['Amount'] = -lineItem['Amount']  // make a debit
 			}//
 			cleanedJSON.push(lineItem)

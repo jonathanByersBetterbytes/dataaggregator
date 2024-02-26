@@ -12,12 +12,11 @@ const pdf2excel = require("pdf-to-excel");
 const XLSX = require('xlsx')
 let fs = require('fs'), PDFParser = require("pdf2json");
 
-
-
-
 const connectDB = require("./config/database");
 const mainRoutes = require("./routes/main");
 const postRoutes = require("./routes/posts");
+
+const Book = require('./models/books')
 
 //Use .env file in config folder
 require("dotenv").config({ path: "./config/.env" });
@@ -68,8 +67,8 @@ app.use("/post", postRoutes);
 
 //Server Running
 app.listen(process.env.PORT, () => {
-  console.log("Server is running, you better catch it!");
-
+  console.log("Server is running, you better catch up!");
+  
   //loopPDFFiles()
   //processExcelFiles()
   //processExcel()

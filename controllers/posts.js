@@ -15,37 +15,65 @@ module.exports = {
       //Grabbing just the posts of the logged-in user
       const posts = await Post.find({ user: req.user.id });
       //Sending post data from mongodb and user data to ejs template
-      res.render("profile.ejs", { parsedText: '', user: req.user }); 
+      res.render("profile.ejs", { posts: posts, user: req.user }); 
     } catch (err) {
       console.log(err);
     }
   },
-  parsePDF: async (req, res) => {
-    let parsedText = ''
+  getDataAggregator: async (req, res) => {
+    let activity = '['
     pdfParser.on("pdfParser_dataError", (errData) =>
       console.error(errData.parserError)
     );
     pdfParser.on("pdfParser_dataReady", (pdfData) => {
       console.log('received pdf')
+      try{
+        let parsedText = JSON.stringify(pdfData)        
+        for(let i=0;i<20 && parsedText.indexOf('"T":"balance"') != -1;i++){
+          parsedText = parsedText.substring(parsedText.indexOf('"T":"balance"')) // chop header
+          parsedText = parsedText.substring(parsedText.indexOf('}]}')+4) // chop header
+          activity += parsedText.substring(0, parsedText.indexOf('],"Fields":[]'))+',' // add page and add ',' to connect the JSON pages
+        }
+        activity = activity.substring(0, activity.indexOf('Ending%20balance')) // chop footer
+        activity = activity.substring(0, activity.lastIndexOf(',{"x":'))+']' // chop footer
+        activity = activity.replaceAll(',"S":-1,"TS":[0,10.2,0,0]', '') // remove useless data
+        activity = activity.replaceAll('"clr":0,"sw":0.32553125,"A":"left",', '') // remove useless data
+        
+        //console.log(activity) 
+        //console.log(JSON.parse(activity))
         fs.writeFile(
-          "parsed.json",
-          JSON.stringify(pdfData),
-          //pdfParser.getRawTextContent(),
+          "statements/parsed.json",
+          activity,
           function (err, result) {
             console.log(err);
           }
         );
-      parsedText = JSON.stringify(pdfData)
-      //req.session.parsedData = { resparsedData: 'test session' };
-      console.log('generated json file')
-    });
-    await pdfParser.loadPDF(req.file.path)
+        //req.session.parsedData = { resparsedData: 'test session' };
+        //console.log('generated json file')
 
-    //parsedText.
-    console.log(parsedText)
+        }catch (err) {
+          console.log(err)
+        }
+        res.render("dataaggregator.ejs", { parsedTextOutput: activity })
+      });  
+      if(req.file) await pdfParser.loadPDF(req.file.path)
 
+    //const execelFileFromJSON = XLSX.utils.json_to_sheet(activity)
+		// generate worksheet and workbook 
+		// const ws = XLSX.utils.json_to_sheet(activity);
+		// const wb = XLSX.utils.book_new();
+		// XLSX.utils.book_append_sheet(wb, ws, "Filtered");
+		// for(let i=2;ws['C'+i];i++){
+		// 	ws['A'+i].t = 'd';
+		// 	//ws['C'+i].v = ws['C'+i].v.replaceAll('$','').replaceAll(',','');
+		// 	ws['C'+i].t = 'n';
+		// 	ws['C'+i].z = '"$"#,##0.00_);\\("$"#,##0.00\\)'
+		// 	//console.log(ws['C'+i])
+		// }
+		//XLSX.writeFile(wb, "statements/arsedTransactions.xlsx", { compression: true });
+    //console.log(ws) 
 
-    res.render("profile.ejs", { parsedTextOutput: parsedText }); 
+     
   },
   getPost: async (req, res) => {
     try {

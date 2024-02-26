@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>DATA AGGREGATOR by BetterBytes</title>
+		<link
+		  rel="icon"
+		  type="image/jpg"
+		  sizes="32x32"
+		  href="imgs/Strawser_Byers_Logo.jpg"
+		/>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="/assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="/assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+			<div id="wrapper" class="fade-in">
+
+				<!-- Intro -->
+					<div id="intro">
+						<h1>Hello, this is<br />
+							DATA AGGREGATOR</h1>
+							<p>A Tool For Compiling Data From Multiple Sources <br />
+								and Displaying in Meaningful Format.</p>
+							<ul class="actions">
+								<li><a href="#header" class="button icon solid solo fa-arrow-down scrolly">Continue</a></li>
+							</ul>
+					</div>
+
+				<!-- Header -->
+					<header id="header">
+						<a href="index.html" class="logo">DATA AGGREGATOR</a>
+					</header>
+
+				<!-- Nav -->
+					<nav id="nav">
+						<ul class="links">
+							<li class="active"><a href="index.html">PDF Statements to Excel</a></li>
+							<li class="active"><a href="index.html">PDF Statements to Formated Raw Text</a></li>
+							<li class="active"><a href="index.html">PDF Statements to CSV</a></li>
+							<!-- 
+							<li><a href="generic.html">Generic Page</a></li>
+							<li><a href="elements.html">Elements Reference</a></li> 
+							-->
+						</ul>
+						<ul class="icons">
+							<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+							<li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+							<li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+							<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
+						</ul>
+					</nav>
+
+				
+				<!-- Main -->
+				<div id="main">
+
+					<!-- Featured Post -->
+						<article class="post featured">
+							<header class="major">
+								<span class="date">PDF Parser</span>
+								<h2><a href="#">Statement Upload</a></h2>
+							</header>
+							<form action="/post/parsePDF/?_method=PUT" enctype="multipart/form-data" method="POST">
+								<div class="mb-3">
+								  <label for="imgUpload" class="form-label">Upload PDF Here:</label>
+								  <input type="file" class="form-control" id="imageUpload" name="file">
+								</div>
+								<button type="submit" class="btn btn-primary" value="Upload">Submit</button>
+							  </form>
+							<!-- <div id=""><input type="file" id="input_dom_element"></div> -->
+							<ul class="actions special">
+								<li><a href="#" class="button large" id="Parsed Output">Output Results</a></li>
+							</ul>
+							<div id="results"><%= '' %></div>
+						</article>
+				</div>
+
+
+			<!-- Copyright -->
+				<div id="copyright">
+					<ul><li>&copy;<a href="https://betterbytes.netlify.app/">BetterBytes</a></li></ul>
+				</div>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="/assets/js/jquery.min.js"></script>
+			<script src="/assets/js/jquery.scrollex.min.js"></script>
+			<script src="/assets/js/jquery.scrolly.min.js"></script>
+			<script src="/assets/js/browser.min.js"></script>
+			<script src="/assets/js/breakpoints.min.js"></script>
+			<script src="/assets/js/util.js"></script>
+			<script src="/assets/js/main.js"></script>
+			<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<!-- 		
+			<script src="https://cdn.jsdelivr.net/npm/pdf-parse@1.1.1/lib/pdf-parse.min.js"></script>	
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.3.200/pdf.js"></script>
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.15.5/xlsx.full.min.js"></script>
+			<script src="/lib/index.js"></script>
+			async function handleFileAsync(e) {
+					const file = e.target.files[0];
+					const data = await file.arrayBuffer();
+					/* data is an ArrayBuffer */
+					// const workbook = XLSX.read(data);
+  					// const worksheet = workbook.Sheets['Sheet1']
+					// const jsonStmt = XLSX.utils.sheet_to_json(worksheet)
+					// const csvStmt = XLSX.utils.sheet_to_csv(worksheet)
+					//const txtStmt = XLSX.utils.sheet_to_txt(worksheet)
+					//const htmlStmt = XLSX.utils.sheet_to_html(worksheet)
+
+					// try {
+					// 	// bar.pdf in your static file server's root dir.
+					// 	const jsonPdf = pdf.genJson(data);
+					// 	console.log(jsonPdf)
+					// } catch (err) {
+					// 	console.error(err);
+					// }
+					
+					/* DO SOMETHING WITH workbook HERE */
+					// jsonStmt.forEach(elem => {
+					// 	if(elem['Name'] !== 'Megan'){
+					// 		my_file_output.innerText += JSON.stringify(elem)+'\n'
+					// 		console.log(elem)		
+					// 	}
+					// }); 
+			input_dom_element.addEventListener("change", handleFileAsync, false);
+
+			<script>
+			  try {
+				// bar.pdf in your static file server's root dir.
+				pdf2excel.genXlsx('/bar.pdf', 'bar.xlsx');
+			  } catch (err) {
+				console.error(err);
+			  }
+			</script> 
+		
+		
+	-->
+	</body>
+</html>
