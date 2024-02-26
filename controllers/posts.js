@@ -21,6 +21,9 @@ module.exports = {
     }
   },
   getDataAggregator: async (req, res) => {
+    res.render("dataaggregator.ejs", { parsedTextOutput: 'parsedTextOutput' })
+  },
+  getParsePDF: async (req, res) => {
     let activity = '['
     pdfParser.on("pdfParser_dataError", (errData) =>
       console.error(errData.parserError)
@@ -73,7 +76,6 @@ module.exports = {
 		//XLSX.writeFile(wb, "statements/arsedTransactions.xlsx", { compression: true });
     //console.log(ws) 
 
-     
   },
   getPost: async (req, res) => {
     try {
