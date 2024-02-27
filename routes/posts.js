@@ -11,7 +11,7 @@ router.get("/:id", ensureAuth, postsController.getPost);
 
 
 //Enables user to create post w/ cloudinary for media uploads
-router.put("/parsePDF", upload.single("file"), postsController.getDataAggregator);
+router.put("/parsePDF", upload.single("file"), postsController.parsePDF);
 
 
 

@@ -7,7 +7,7 @@ const { ensureAuth } = require("../middleware/auth");
 
 //Main Routes 
 router.get("/", homeController.getIndex);
-router.get("/dataaggregator", postsController.getDataAggregator);
+router.get("/dataaggregator", homeController.getDataAggregator);
 
 
 router.get("/profile", ensureAuth, postsController.getProfile);

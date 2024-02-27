@@ -74,12 +74,28 @@
 							<ul class="actions special">
 								<li><a href="#" class="button large" id="Parsed Output">Output Results</a></li>
 							</ul>
+							<table id='myTable'>
+								<thead>
+									<tr>
+										<th>Date</th>
+										<th>Description</th>
+										<th>Amount</th>
+										<th>Check #</th>
+									</tr>
+								</thead>
+								<tbody>
+
+								</tbody>
+							</table>
+							
+							<!-- <div id="results"> .replaceAll('&#34;','"')</div> -->
+							
 							<div id="results"><%= parsedTextOutput %></div>
 						</article>
 				</div>
 
 
-			<!-- Copyright -->
+			<!-- Copyright  -->
 				<div id="copyright">
 					<ul><li>&copy;<a href="https://betterbytes.netlify.app/">BetterBytes</a></li></ul>
 				</div>
@@ -95,6 +111,33 @@
 			<script src="/assets/js/util.js"></script>
 			<script src="/assets/js/main.js"></script>
 			<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+			
+			<script>
+				
+			const tableBody = document.querySelector('#myTable tbody')
+			let row, dateCell, desCell, amountCell, checkNumCell
+			let jsonTrans = []
+			
+		// row = document.createElement('tr')
+
+		// dateCell = document.createElement('td')
+		// dateCell.textContent = 
+		// row.appendChild(dateCell)
+
+		// desCell = document.createElement('td')
+		// desCell.textContent = act.Description
+		// row.appendChild(desCell)
+
+		// amountCell = document.createElement('td')
+		// amountCell.textContent = act.Amount
+		// row.appendChild(amountCell)
+
+		// checkNumCell = document.createElement('td')
+		// checkNumCell.textContent = act['Check#']
+		// row.appendChild(checkNumCell)
+
+		// tableBody.appendChild(row)
+			</script> 
 <!-- 		
 			<script src="https://cdn.jsdelivr.net/npm/pdf-parse@1.1.1/lib/pdf-parse.min.js"></script>	
 			<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.3.200/pdf.js"></script>

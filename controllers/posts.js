@@ -20,52 +20,76 @@ module.exports = {
       console.log(err);
     }
   },
-  getDataAggregator: async (req, res) => {
-    res.render("dataaggregator.ejs", { parsedTextOutput: 'parsedTextOutput' })
-  },
-  getParsePDF: async (req, res) => {
-    let activity = '['
+  parsePDF: async (req, res) => {
+    let activity = ''
+    let excelJSON = [] 
     pdfParser.on("pdfParser_dataError", (errData) =>
       console.error(errData.parserError)
     ); 
     pdfParser.on("pdfParser_dataReady", (pdfData) => {
       console.log('received pdf')
       try{
+        //console.log(pdfData)
         let parsedText = JSON.stringify(pdfData)        
         for(let i=0;i<20 && parsedText.indexOf('"T":"balance"') != -1;i++){
-          parsedText = parsedText.substring(parsedText.indexOf('"T":"balance"')) // chop header
+          parsedText = parsedText.substring(parsedText.indexOf('"T":"balance"')+4) // chop header
           parsedText = parsedText.substring(parsedText.indexOf('}]}')+4) // chop header
           activity += parsedText.substring(0, parsedText.indexOf('],"Fields":[]'))+',' // add page and add ',' to connect the JSON pages
         }
         activity = activity.substring(0, activity.indexOf('Ending%20balance')) // chop footer
-        activity = activity.substring(0, activity.lastIndexOf(',{"x":'))+']' // chop footer
+        activity = activity.substring(0, activity.lastIndexOf(',{"x":')) // chop footer
         activity = activity.replaceAll(',"S":-1,"TS":[0,10.2,0,0]', '') // remove useless data
-        activity = activity.replaceAll('"clr":0,"sw":0.32553125,"A":"left",', '') // remove useless data
-        
+        activity = activity.replaceAll('"clr":0,"sw":0.32553125,"A":"left",', '') // remove useless data         
+        // fs.writeFile( 
+        //   "statements/parsed.json",
+        //   activity,
+        //   function (err, result) {
+        //     console.log(err);
+        //   }
+        // );
         //console.log(activity) 
-        //console.log(JSON.parse(activity))
-        fs.writeFile(
-          "statements/parsed.json",
-          activity,
-          function (err, result) {
-            console.log(err);
-          }
-        );
+        activity = JSON.parse('['+activity+']')
         //req.session.parsedData = { resparsedData: 'test session' };
-        //console.log('generated json file')
-
-        }catch (err) {
-          console.log(err)
-        }
-        res.render("dataaggregator.ejs", { parsedTextOutput: activity })
-      });  
-      if(req.file) await pdfParser.loadPDF(req.file.path)
-
-    //const execelFileFromJSON = XLSX.utils.json_to_sheet(activity)
+        console.log(activity)
+        console.log('generated json file')
+      }catch (err) {
+        console.log(err) 
+      }
+      let actLine 
+      //console.log(activity)
+      // activity.forEach(col => { 
+      //   if(col.x === 3.8){ 
+      //     // replace special characters
+      //     if(actLine) actLine.Description = actLine.Description.replaceAll('%26', '&').replaceAll('%20', ' ').replaceAll('%23', '#').replaceAll('%2F', '/').replaceAll('%2C', ',')
+      //     actLine = {'Description':''} // initialize new line if it's the date
+      //     excelJSON.push(actLine)  
+      //     actLine['Date'] = col.R[0]['T'].replaceAll('%2F', '/')
+      //   }else if(col.x > 7.5 && col.x < 8) actLine['Check#'] = col.R[0].T 
+      //   else if(col.x === 9.275) actLine['Description'] += col.R[0]['T']
+      //   else if(col.x > 24 && col.x < 27) actLine['Amount'] = +col.R[0]['T'].replaceAll('%2C', '') 
+      //   else if(col.x > 28 && col.x < 31) actLine['Amount'] = -col.R[0]['T'].replaceAll('%2C', '')
+      //   //actLine['x'] = col.x 
+      //   //console.log(actLine['date']) .replaceAll('%2C', '')
+      // })
+      // generate worksheet and workbook 
+      // const ws = XLSX.utils.json_to_sheet(activity);
+      // const wb = XLSX.utils.book_new();
+      // XLSX.utils.book_append_sheet(wb, ws, "Filtered");
+      // XLSX.writeFile(wb, "statements/parsedTransactions.xlsx", { compression: true });
+      //JSON.stringify(excelJSON)
+      
+      //console.log(JSON.stringify(excelJSON)) 
+      //console.log(excelJSON)      
+      res.render("dataaggregator.ejs", { parsedTextOutput: excelJSON })
+    });  
+    if(req.file) await pdfParser.loadPDF(req.file.path)
+  
+    // const execelFileFromJSON = XLSX.utils.json_to_sheet(activity)
 		// generate worksheet and workbook 
 		// const ws = XLSX.utils.json_to_sheet(activity);
 		// const wb = XLSX.utils.book_new();
 		// XLSX.utils.book_append_sheet(wb, ws, "Filtered");
+		// XLSX.writeFile(wb, "statements/parsedTransactions.xlsx", { compression: true });
 		// for(let i=2;ws['C'+i];i++){
 		// 	ws['A'+i].t = 'd';
 		// 	//ws['C'+i].v = ws['C'+i].v.replaceAll('$','').replaceAll(',','');
@@ -73,8 +97,8 @@ module.exports = {
 		// 	ws['C'+i].z = '"$"#,##0.00_);\\("$"#,##0.00\\)'
 		// 	//console.log(ws['C'+i])
 		// }
-		//XLSX.writeFile(wb, "statements/arsedTransactions.xlsx", { compression: true });
-    //console.log(ws) 
+		//XLSX.writeFile(wb, "statements/parsedTransactions.xlsx", { compression: true });
+    console.log('END test') 
 
   },
   getPost: async (req, res) => {
