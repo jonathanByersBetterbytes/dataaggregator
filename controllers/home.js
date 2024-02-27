@@ -3,6 +3,6 @@ module.exports = {
     res.render("index.ejs");
   },
   getDataAggregator: (req, res) => {
-    res.render("dataaggregator.ejs", { parsedTextOutput: '' })
+    res.render("dataaggregator.ejs", { parsedTextOutput: '', excelFile: '' })
   },
 };

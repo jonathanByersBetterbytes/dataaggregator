@@ -3,6 +3,7 @@ const pdf2excel = require("pdf-to-excel");
 const XLSX = require('xlsx')
 let fs = require('fs'), PDFParser = require("pdf2json");
 let pdfParser = new PDFParser(this, 1);
+const session = require('express-session')
 
 const Post = require("../models/Post");
 
@@ -21,15 +22,15 @@ module.exports = {
     }
   },
   parsePDF: async (req, res) => {
-    let activity = ''
-    let excelJSON = [] 
     pdfParser.on("pdfParser_dataError", (errData) =>
       console.error(errData.parserError)
     ); 
     pdfParser.on("pdfParser_dataReady", (pdfData) => {
       console.log('received pdf')
-      try{
-        //console.log(pdfData)
+      let activity = ''
+      let excelJSON = [] 
+      try{ 
+        //console.log(pdfData) 
         let parsedText = JSON.stringify(pdfData)        
         for(let i=0;i<20 && parsedText.indexOf('"T":"balance"') != -1;i++){
           parsedText = parsedText.substring(parsedText.indexOf('"T":"balance"')+4) // chop header
@@ -39,7 +40,8 @@ module.exports = {
         activity = activity.substring(0, activity.indexOf('Ending%20balance')) // chop footer
         activity = activity.substring(0, activity.lastIndexOf(',{"x":')) // chop footer
         activity = activity.replaceAll(',"S":-1,"TS":[0,10.2,0,0]', '') // remove useless data
-        activity = activity.replaceAll('"clr":0,"sw":0.32553125,"A":"left",', '') // remove useless data         
+        activity = activity.replaceAll('"clr":0,"sw":0.32553125,"A":"left",', '') // remove useless data  
+
         // fs.writeFile( 
         //   "statements/parsed.json",
         //   activity,
@@ -47,39 +49,41 @@ module.exports = {
         //     console.log(err);
         //   }
         // );
-        //console.log(activity) 
+
         activity = JSON.parse('['+activity+']')
-        //req.session.parsedData = { resparsedData: 'test session' };
-        console.log(activity)
-        console.log('generated json file')
+        //console.log(activity)
+        console.log('generated json')
       }catch (err) {
         console.log(err) 
       }
-      let actLine 
       //console.log(activity)
-      // activity.forEach(col => { 
-      //   if(col.x === 3.8){ 
-      //     // replace special characters
-      //     if(actLine) actLine.Description = actLine.Description.replaceAll('%26', '&').replaceAll('%20', ' ').replaceAll('%23', '#').replaceAll('%2F', '/').replaceAll('%2C', ',')
-      //     actLine = {'Description':''} // initialize new line if it's the date
-      //     excelJSON.push(actLine)  
-      //     actLine['Date'] = col.R[0]['T'].replaceAll('%2F', '/')
-      //   }else if(col.x > 7.5 && col.x < 8) actLine['Check#'] = col.R[0].T 
-      //   else if(col.x === 9.275) actLine['Description'] += col.R[0]['T']
-      //   else if(col.x > 24 && col.x < 27) actLine['Amount'] = +col.R[0]['T'].replaceAll('%2C', '') 
-      //   else if(col.x > 28 && col.x < 31) actLine['Amount'] = -col.R[0]['T'].replaceAll('%2C', '')
-      //   //actLine['x'] = col.x 
-      //   //console.log(actLine['date']) .replaceAll('%2C', '')
-      // })
+      let actLine // needs to be outside loop to build line
+      activity.forEach(col => { 
+        if(col.x === 3.8){ // if date then also start new line
+          // replace special characters
+          if(actLine) actLine.Description = actLine.Description.replaceAll('%24', '$').replaceAll('%26', '&').replaceAll('%20', ' ').replaceAll('%23', '#').replaceAll('%2F', '/').replaceAll('%2C', ',')
+          actLine = {'Description':''} // initialize new line if it's the date
+          excelJSON.push(actLine)  
+          actLine['Date'] = col.R[0]['T'].replaceAll('%2F', '/')+'/2021'
+        }else if(col.x > 7.5 && col.x < 8) actLine['Check#'] = col.R[0].T 
+        else if(col.x === 9.275) actLine['Description'] += col.R[0]['T']
+        else if(col.x > 24 && col.x < 27) actLine['Amount'] = +col.R[0]['T'].replaceAll('%2C', '') 
+        else if(col.x > 28 && col.x < 31) actLine['Amount'] = -col.R[0]['T'].replaceAll('%2C', '')
+        //actLine['x'] = col.x 
+        console.log('Date: '+actLine['Date'])
+      }) 
       // generate worksheet and workbook 
-      // const ws = XLSX.utils.json_to_sheet(activity);
-      // const wb = XLSX.utils.book_new();
-      // XLSX.utils.book_append_sheet(wb, ws, "Filtered");
-      // XLSX.writeFile(wb, "statements/parsedTransactions.xlsx", { compression: true });
-      //JSON.stringify(excelJSON)
-      
+      const ws = XLSX.utils.json_to_sheet(excelJSON);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Filtered");
+      XLSX.writeFile(wb, "statements/parsedTransactions.xlsx", { compression: true });
+      console.log('generated xlxs file')
+      //JSON.stringify(excelJSON) 
+       
       //console.log(JSON.stringify(excelJSON)) 
       //console.log(excelJSON)      
+      //res.redirect("/dataaggregator");
+      //req.session.parsedTextOutput = excelJSON;
       res.render("dataaggregator.ejs", { parsedTextOutput: excelJSON })
     });  
     if(req.file) await pdfParser.loadPDF(req.file.path)

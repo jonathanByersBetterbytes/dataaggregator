@@ -63,7 +63,7 @@
 								<span class="date">PDF Parser</span>
 								<h2><a href="#">Statement Upload</a></h2>
 							</header>
-							<form action="/post/parsePDF/?_method=PUT" enctype="multipart/form-data" method="POST">
+							<form action="/post/parsePDF" enctype="multipart/form-data" method="POST">
 								<div class="mb-3">
 								  <label for="imgUpload" class="form-label">Upload PDF Here:</label>
 								  <input type="file" class="form-control" id="imageUpload" name="file">
@@ -71,26 +71,35 @@
 								<button type="submit" class="btn btn-primary" value="Upload">Submit</button>
 							  </form>
 							<!-- <div id=""><input type="file" id="input_dom_element"></div> -->
+							
+						<% if(parsedTextOutput.length>0){ %>
 							<ul class="actions special">
-								<li><a href="#" class="button large" id="Parsed Output">Output Results</a></li>
+								<li><a href="parsedTransactions.xlsx" class="button large" id="Parsed Output">File Placed in Downloads</a></li>
 							</ul>
+						<% } %>
 							<table id='myTable'>
 								<thead>
 									<tr>
 										<th>Date</th>
 										<th>Description</th>
 										<th>Amount</th>
-										<th>Check #</th>
+										<th>Check#</th>
 									</tr>
 								</thead>
 								<tbody>
+				<% for(let i=0;i<parsedTextOutput.length;i++){ %>
+					<tr>
+						<td><%= parsedTextOutput[i].Date %></td>
+						<td><%= parsedTextOutput[i].Description.replaceAll('authorized', '') %></td>
+						<td><%= parsedTextOutput[i].Amount %></td>
+						<td><%= parsedTextOutput[i]['Check#'] %></td>
+					</tr>
+				<% } %>
 
 								</tbody>
 							</table>
 							
-							<!-- <div id="results"> .replaceAll('&#34;','"')</div> -->
-							
-							<div id="results"><%= parsedTextOutput %></div>
+							<div id="results"></div>
 						</article>
 				</div>
 
@@ -102,85 +111,66 @@
 
 			</div>
 
-		<!-- Scripts -->
-			<script src="/assets/js/jquery.min.js"></script>
-			<script src="/assets/js/jquery.scrollex.min.js"></script>
-			<script src="/assets/js/jquery.scrolly.min.js"></script>
-			<script src="/assets/js/browser.min.js"></script>
-			<script src="/assets/js/breakpoints.min.js"></script>
-			<script src="/assets/js/util.js"></script>
-			<script src="/assets/js/main.js"></script>
-			<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-			
-			<script>
-				
-			const tableBody = document.querySelector('#myTable tbody')
-			let row, dateCell, desCell, amountCell, checkNumCell
-			let jsonTrans = []
-			
-		// row = document.createElement('tr')
-
-		// dateCell = document.createElement('td')
-		// dateCell.textContent = 
-		// row.appendChild(dateCell)
-
-		// desCell = document.createElement('td')
-		// desCell.textContent = act.Description
-		// row.appendChild(desCell)
-
-		// amountCell = document.createElement('td')
-		// amountCell.textContent = act.Amount
-		// row.appendChild(amountCell)
-
-		// checkNumCell = document.createElement('td')
-		// checkNumCell.textContent = act['Check#']
-		// row.appendChild(checkNumCell)
-
-		// tableBody.appendChild(row)
-			</script> 
-<!-- 		
-			<script src="https://cdn.jsdelivr.net/npm/pdf-parse@1.1.1/lib/pdf-parse.min.js"></script>	
-			<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.3.200/pdf.js"></script>
-			<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.15.5/xlsx.full.min.js"></script>
-			<script src="/lib/index.js"></script>
-			async function handleFileAsync(e) {
-					const file = e.target.files[0];
-					const data = await file.arrayBuffer();
-					/* data is an ArrayBuffer */
-					// const workbook = XLSX.read(data);
-  					// const worksheet = workbook.Sheets['Sheet1']
-					// const jsonStmt = XLSX.utils.sheet_to_json(worksheet)
-					// const csvStmt = XLSX.utils.sheet_to_csv(worksheet)
-					//const txtStmt = XLSX.utils.sheet_to_txt(worksheet)
-					//const htmlStmt = XLSX.utils.sheet_to_html(worksheet)
-
-					// try {
-					// 	// bar.pdf in your static file server's root dir.
-					// 	const jsonPdf = pdf.genJson(data);
-					// 	console.log(jsonPdf)
-					// } catch (err) {
-					// 	console.error(err);
-					// }
-					
-					/* DO SOMETHING WITH workbook HERE */
-					// jsonStmt.forEach(elem => {
-					// 	if(elem['Name'] !== 'Megan'){
-					// 		my_file_output.innerText += JSON.stringify(elem)+'\n'
-					// 		console.log(elem)		
-					// 	}
-					// }); 
-			input_dom_element.addEventListener("change", handleFileAsync, false);
-
-			<script>
-			  try {
-				// bar.pdf in your static file server's root dir.
-				pdf2excel.genXlsx('/bar.pdf', 'bar.xlsx');
-			  } catch (err) {
-				console.error(err);
-			  }
-			</script> 
+<!-- Scripts -->
+	<script src="/assets/js/jquery.min.js"></script>
+	<script src="/assets/js/jquery.scrollex.min.js"></script>
+	<script src="/assets/js/jquery.scrolly.min.js"></script>
+	<script src="/assets/js/browser.min.js"></script>
+	<script src="/assets/js/breakpoints.min.js"></script>
+	<script src="/assets/js/util.js"></script>
+	<script src="/assets/js/main.js"></script>
+	<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+	
+	<script>
+	<% if(parsedTextOutput.length > 0){ %>
+		const tableBody = document.querySelector('#myTable tbody')
+		let row, dateCell, desCell, amountCell, checkNumCell
+		let jsonTrans = [], newTransLn = {}
+		<% for(let i=0;i<parsedTextOutput.length;i++){ %> // disabled
+			newTransLn = {}
+			newTransLn['Date'] = '<%= parsedTextOutput[i].Date %>'
+			newTransLn['Description'] = '<%= parsedTextOutput[i].Description %>'
+			newTransLn['Amount'] = <%= parsedTextOutput[i].Amount %>
+			newTransLn['Check#'] = '<%= parsedTextOutput[i]['Check#'] %>'
+			jsonTrans.push(newTransLn)
+			console.log(newTransLn)
+		<% } %>
 		
-		
-	-->
+		// generate worksheet and workbook 
+		const ws = XLSX.utils.json_to_sheet(jsonTrans);
+		const wb = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(wb, ws, "Filtered");
+		for(let i=2;ws['C'+i];i++){
+			ws['A'+i].t = 'd';
+			//ws['C'+i].v = ws['C'+i].v.replaceAll('$','').replaceAll(',','');
+			ws['C'+i].t = 'n';
+			ws['C'+i].z = '"$"#,##0.00_);\\("$"#,##0.00\\)'
+			//console.log(ws['C'+i])
+		}
+		XLSX.writeFile(wb, "parsedTransactions.xlsx", { compression: true });
+	<% } %>
+	// jsonTrans.forEach(act => {
+	// 	row = document.createElement('tr')
+
+	// 	dateCell = document.createElement('td')
+	// 	dateCell.textContent = act.Date
+	// 	row.appendChild(dateCell)
+
+	// 	desCell = document.createElement('td')
+	// 	desCell.textContent = act.Description
+	// 	row.appendChild(desCell)
+
+	// 	amountCell = document.createElement('td')
+	// 	amountCell.textContent = act.Amount
+	// 	row.appendChild(amountCell)
+
+	// 	checkNumCell = document.createElement('td')
+	// 	checkNumCell.textContent = act['Check#']
+	// 	row.appendChild(checkNumCell)
+
+	// 	tableBody.appendChild(row)
+	// })
+	//alert(jsonTrans)
+	</script> 
 	</body>
 </html>
