@@ -10,7 +10,7 @@ const { ensureAuth } = require("../middleware/auth");
 router.get("/:id", ensureAuth, postsController.getPost);
 
 
-//Enables user to create post w/ cloudinary for media uploads
+//Enables user to create an exportable excel file from pdf statements
 router.post("/parsePDF", upload.single("file"), postsController.parsePDF);
 
 

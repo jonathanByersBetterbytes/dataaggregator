@@ -78,13 +78,12 @@ module.exports = {
       XLSX.utils.book_append_sheet(wb, ws, "Filtered");
       XLSX.writeFile(wb, "statements/parsedTransactions.xlsx", { compression: true });
       console.log('generated xlxs file')
-      //JSON.stringify(excelJSON) 
        
       //console.log(JSON.stringify(excelJSON)) 
       //console.log(excelJSON)      
-      //res.redirect("/dataaggregator");
-      //req.session.parsedTextOutput = excelJSON;
-      res.render("dataaggregator.ejs", { parsedTextOutput: excelJSON })
+      req.session.parsedTextOutput = excelJSON;
+      res.redirect("/dataaggregator");
+      //res.render("dataaggregator.ejs", { parsedTextOutput: excelJSON })
     });  
     if(req.file) await pdfParser.loadPDF(req.file.path)
   

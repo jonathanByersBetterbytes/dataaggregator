@@ -74,7 +74,7 @@
 							
 						<% if(parsedTextOutput.length>0){ %>
 							<ul class="actions special">
-								<li><a href="parsedTransactions.xlsx" class="button large" id="Parsed Output">File Placed in Downloads</a></li>
+								<li><a href="parsedTransactions.xlsx" class="button large" id="Parsed Output">File Saved in Your Downloads</a></li>
 							</ul>
 						<% } %>
 							<table id='myTable'>
@@ -122,55 +122,62 @@
 	<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 	
 	<script>
-	<% if(parsedTextOutput.length > 0){ %>
-		const tableBody = document.querySelector('#myTable tbody')
-		let row, dateCell, desCell, amountCell, checkNumCell
-		let jsonTrans = [], newTransLn = {}
-		<% for(let i=0;i<parsedTextOutput.length;i++){ %> // disabled
-			newTransLn = {}
-			newTransLn['Date'] = '<%= parsedTextOutput[i].Date %>'
-			newTransLn['Description'] = '<%= parsedTextOutput[i].Description %>'
-			newTransLn['Amount'] = <%= parsedTextOutput[i].Amount %>
-			newTransLn['Check#'] = '<%= parsedTextOutput[i]['Check#'] %>'
-			jsonTrans.push(newTransLn)
-			console.log(newTransLn)
+		<% if(parsedTextOutput.length > 0){ %>
+			const tableBody = document.querySelector('#myTable tbody')
+			let row, dateCell, desCell, amountCell, checkNumCell
+			let jsonTrans = [], newTransLn = {}
+			<% for(let i=0;i<parsedTextOutput.length;i++){ %> // disabled
+				newTransLn = {}
+				newTransLn['Date'] = '<%= parsedTextOutput[i].Date %>'
+				newTransLn['Description'] = '<%= parsedTextOutput[i].Description %>'
+				newTransLn['Amount'] = <%= parsedTextOutput[i].Amount %>
+				newTransLn['Check#'] = '<%= parsedTextOutput[i]['Check#'] %>'
+				jsonTrans.push(newTransLn)
+				//console.log(newTransLn)
+			<% } %>
+			
+			// generate worksheet and workbook 
+			const ws = XLSX.utils.json_to_sheet(jsonTrans);
+			const wb = XLSX.utils.book_new();		
+			XLSX.utils.book_append_sheet(wb, ws, "Filtered");
+			
+			ws["!cols"] = [] /* create column metadata object */
+			ws["!cols"][0] = { width: 10 } 
+			ws["!cols"][1] = { width: 70 } 
+			ws["!cols"][2] = { width: 15 } 
+			
+			for(let i=2;ws['C'+i];i++){
+				ws['A'+i].t = 'd';
+				ws['C'+i].t = 'n';
+				ws['C'+i].z = '"$"#,##0.00_);\\("$"#,##0.00\\)'
+			}
+			XLSX.writeFile(wb, "parsedTransactions.xlsx", { compression: true, cellStyles: true });
 		<% } %>
 		
-		// generate worksheet and workbook 
-		const ws = XLSX.utils.json_to_sheet(jsonTrans);
-		const wb = XLSX.utils.book_new();
-		XLSX.utils.book_append_sheet(wb, ws, "Filtered");
-		for(let i=2;ws['C'+i];i++){
-			ws['A'+i].t = 'd';
-			//ws['C'+i].v = ws['C'+i].v.replaceAll('$','').replaceAll(',','');
-			ws['C'+i].t = 'n';
-			ws['C'+i].z = '"$"#,##0.00_);\\("$"#,##0.00\\)'
-			//console.log(ws['C'+i])
-		}
-		XLSX.writeFile(wb, "parsedTransactions.xlsx", { compression: true });
-	<% } %>
-	// jsonTrans.forEach(act => {
-	// 	row = document.createElement('tr')
+		
+		// create table
+		// jsonTrans.forEach(act => {
+		// 	row = document.createElement('tr')
 
-	// 	dateCell = document.createElement('td')
-	// 	dateCell.textContent = act.Date
-	// 	row.appendChild(dateCell)
+		// 	dateCell = document.createElement('td')
+		// 	dateCell.textContent = act.Date
+		// 	row.appendChild(dateCell)
 
-	// 	desCell = document.createElement('td')
-	// 	desCell.textContent = act.Description
-	// 	row.appendChild(desCell)
+		// 	desCell = document.createElement('td')
+		// 	desCell.textContent = act.Description
+		// 	row.appendChild(desCell)
 
-	// 	amountCell = document.createElement('td')
-	// 	amountCell.textContent = act.Amount
-	// 	row.appendChild(amountCell)
+		// 	amountCell = document.createElement('td')
+		// 	amountCell.textContent = act.Amount
+		// 	row.appendChild(amountCell)
 
-	// 	checkNumCell = document.createElement('td')
-	// 	checkNumCell.textContent = act['Check#']
-	// 	row.appendChild(checkNumCell)
+		// 	checkNumCell = document.createElement('td')
+		// 	checkNumCell.textContent = act['Check#']
+		// 	row.appendChild(checkNumCell)
 
-	// 	tableBody.appendChild(row)
-	// })
-	//alert(jsonTrans)
+		// 	tableBody.appendChild(row)
+		// })
+		//alert(jsonTrans)
 	</script> 
 	</body>
 </html>
