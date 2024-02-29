@@ -155,7 +155,7 @@ module.exports = {
     const loadPDF = (stmnt) => {
       if(req.files.length === cnt){
         console.log('Done');
-        return new Promise((resolve) => { 
+        return new Promise(() => { 
           res.redirect("/dataaggregator");
         })
       }
@@ -168,12 +168,6 @@ module.exports = {
       ); 
 
       pdfParser.on("pdfParser_dataReady", (pdfData) => {
-        //console.log('File Name Check: ' + lastFile + ' === ' + file + ' = ' + (lastFile === file))
-        // if(lastFile === file){
-        //   console.log('Skipping duplicate');
-        //   loadPDF(req.files[++cnt]) // recursion to process next file
-        // }
-        //lastFile = file // flag for dups
         console.log('NEW FILE received pdf: ' + file)
         try{ 
           let parsedText = JSON.stringify(pdfData)  
@@ -249,7 +243,7 @@ module.exports = {
   //     console.log('generated xlxs file')
        
   //     //console.log(JSON.stringify(excelJSON)) 
-  //     //console.log(excelJSON)      
+  //     //console.log(excelJSON)       
   //     req.session.parsedTextOutput = excelJSON;
   //     res.redirect("/dataaggregator");
   //     //res.render("dataaggregator.ejs", { parsedTextOutput: excelJSON })
