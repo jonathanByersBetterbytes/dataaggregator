@@ -4,6 +4,8 @@ module.exports = {
   },
   getDataAggregator: (req, res) => {
     const parsedTextSession = req.session.parsedTextOutput ? req.session.parsedTextOutput : '';
+    req.session.parsedTextOutput = ''
+    req.files = []
     res.render("dataaggregator.ejs", { parsedTextOutput: parsedTextSession })
   },
 };

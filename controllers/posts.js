@@ -21,89 +21,243 @@ module.exports = {
       console.log(err);
     }
   },
-  parsePDF: async (req, res) => {
-    pdfParser.on("pdfParser_dataError", (errData) =>
-      console.error(errData.parserError)
-    ); 
-    pdfParser.on("pdfParser_dataReady", (pdfData) => {
-      console.log('received pdf')
-      let activity = ''
-      let excelJSON = [] 
-      try{ 
-        //console.log(pdfData) 
-        let parsedText = JSON.stringify(pdfData)        
-        for(let i=0;i<20 && parsedText.indexOf('"T":"balance"') != -1;i++){
-          parsedText = parsedText.substring(parsedText.indexOf('"T":"balance"')+4) // chop header
-          parsedText = parsedText.substring(parsedText.indexOf('}]}')+4) // chop header
-          activity += parsedText.substring(0, parsedText.indexOf('],"Fields":[]'))+',' // add page and add ',' to connect the JSON pages
-        }
-        activity = activity.substring(0, activity.indexOf('Ending%20balance')) // chop footer
-        activity = activity.substring(0, activity.lastIndexOf(',{"x":')) // chop footer
-        activity = activity.replaceAll(',"S":-1,"TS":[0,10.2,0,0]', '') // remove useless data
-        activity = activity.replaceAll('"clr":0,"sw":0.32553125,"A":"left",', '') // remove useless data  
 
-        // fs.writeFile( 
-        //   "statements/parsed.json",
-        //   activity,
-        //   function (err, result) {
-        //     console.log(err);
-        //   }
-        // );
-
-        activity = JSON.parse('['+activity+']')
-        //console.log(activity)
-        console.log('generated json')
-      }catch (err) {
-        console.log(err) 
-      }
-      //console.log(activity)
-      let actLine // needs to be outside loop to build line
-      activity.forEach(col => { 
-        if(col.x === 3.8){ // if date then also start new line
-          // replace special characters
-          if(actLine) actLine.Description = actLine.Description.replaceAll('%24', '$').replaceAll('%26', '&').replaceAll('%20', ' ').replaceAll('%23', '#').replaceAll('%2F', '/').replaceAll('%2C', ',')
-          actLine = {'Description':''} // initialize new line if it's the date
-          excelJSON.push(actLine)  
-          actLine['Date'] = col.R[0]['T'].replaceAll('%2F', '/')+'/2021'
-        }else if(col.x > 7.5 && col.x < 8) actLine['Check#'] = col.R[0].T 
-        else if(col.x === 9.275) actLine['Description'] += col.R[0]['T']
-        else if(col.x > 24 && col.x < 27) actLine['Amount'] = +col.R[0]['T'].replaceAll('%2C', '') 
-        else if(col.x > 28 && col.x < 31) actLine['Amount'] = -col.R[0]['T'].replaceAll('%2C', '')
-        //actLine['x'] = col.x 
-        console.log('Date: '+actLine['Date'])
-      }) 
-      // generate worksheet and workbook 
-      const ws = XLSX.utils.json_to_sheet(excelJSON);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Filtered");
-      XLSX.writeFile(wb, "statements/parsedTransactions.xlsx", { compression: true });
-      console.log('generated xlxs file')
-       
-      //console.log(JSON.stringify(excelJSON)) 
-      //console.log(excelJSON)      
-      req.session.parsedTextOutput = excelJSON;
-      res.redirect("/dataaggregator");
-      //res.render("dataaggregator.ejs", { parsedTextOutput: excelJSON })
-    });  
-    if(req.file) await pdfParser.loadPDF(req.file.path)
+  parsePDFs: async (req, res) => {
+    // pdfParser.on("pdfParser_dataReady", (pdfData) => {
+    //   console.log('received pdf: ' + file)
+    //   console.log(pdfData)
+    //     let activity = ''
+    //     try{ 
+    //       let parsedText = JSON.stringify(pdfData)  
+    //       for(let i=0;i<20 && parsedText.indexOf('"T":"balance"') != -1;i++){
+    //         parsedText = parsedText.substring(parsedText.indexOf('"T":"balance"')+4) // chop header
+    //         parsedText = parsedText.substring(parsedText.indexOf('}]}')+4) // chop header
+    //         activity += parsedText.substring(0, parsedText.indexOf('],"Fields":[]'))+',' // add page and add ',' to connect the JSON pages
+    //       }
+    //       activity = activity.substring(0, activity.indexOf('Ending%20balance')) // chop footer
+    //       activity = activity.substring(0, activity.lastIndexOf(',{"x":')) // chop footer
+    //       activity = activity.replaceAll(',"S":-1,"TS":[0,10.2,0,0]', '') // remove useless data
+    //       activity = activity.replaceAll('"clr":0,"sw":0.32553125,"A":"left",', '') // remove useless data  
   
-    // const execelFileFromJSON = XLSX.utils.json_to_sheet(activity)
-		// generate worksheet and workbook 
-		// const ws = XLSX.utils.json_to_sheet(activity);
-		// const wb = XLSX.utils.book_new();
-		// XLSX.utils.book_append_sheet(wb, ws, "Filtered");
-		// XLSX.writeFile(wb, "statements/parsedTransactions.xlsx", { compression: true });
-		// for(let i=2;ws['C'+i];i++){
-		// 	ws['A'+i].t = 'd';
-		// 	//ws['C'+i].v = ws['C'+i].v.replaceAll('$','').replaceAll(',','');
-		// 	ws['C'+i].t = 'n';
-		// 	ws['C'+i].z = '"$"#,##0.00_);\\("$"#,##0.00\\)'
-		// 	//console.log(ws['C'+i])
-		// }
-		//XLSX.writeFile(wb, "statements/parsedTransactions.xlsx", { compression: true });
-    console.log('END test') 
+    //       activity = JSON.parse('['+activity+']')
+    //       console.log('generated json' + file)
+    //     }catch (err) {
+    //       console.log(err) 
+    //     }
 
-  },
+    //     let actLine // needs to be outside loop to build line
+    //     activity.forEach(col => { 
+    //       if(col.x === 3.8){ // if date then also start new line
+    //         // replace special characters
+    //         if(actLine) actLine.Description = actLine.Description.replaceAll('%24', '$').replaceAll('%26', '&').replaceAll('%20', ' ').replaceAll('%23', '#').replaceAll('%2F', '/').replaceAll('%2C', ',')
+    //         actLine = {'Description':''} // initialize new line if it's the date
+    //         excelJSON.push(actLine)  
+
+    //         // year needs to be dynamic
+    //         actLine['Date'] = col.R[0]['T'].replaceAll('%2F', '/')+'/2021'
+    //       }else if(col.x > 7.5 && col.x < 8) actLine['Check#'] = col.R[0].T 
+    //       else if(col.x === 9.275) actLine['Description'] += col.R[0]['T']  // build description
+    //       else if(col.x > 24 && col.x < 27) actLine['Amount'] = +col.R[0]['T'].replaceAll('%2C', '') // deposit
+    //       else if(col.x > 28 && col.x < 31) actLine['Amount'] = -col.R[0]['T'].replaceAll('%2C', '') // withdrawal
+    //       //actLine['x'] = col.x 
+    //       //console.log('Description: '+actLine['Description'])
+    //     }) 
+    //   //console.log(JSON.stringify(excelJSON)) 
+    //   pdfData = undefined
+    //   console.log('END Parse' + file)  
+    // });  
+
+    // function resolveAfter2Seconds(smnt) {
+    //   return new Promise((resolve) => {
+    //     console.log('123: ')
+    //     file = smnt.originalname
+    //     pdfParser.loadPDF(smnt.path)
+    //     setTimeout(() => {
+    //       resolve('processed file ' + smnt.originalname);
+    //     }, 2000);
+    //     console.log('456: ')
+    //   });
+    // }
+    // async function processFiles(){
+    //   //req.files.forEach(file=>{ 
+    //   console.log('Starting ')
+    //   for(let i=0;i<req.files.length;i++){
+    //     const response = await resolveAfter2Seconds(req.files[i])
+    //     console.log('response: ' + response)
+    //   }
+    //   console.log('req.files.length: ' + req.files.length) 
+    //   console.log(req.files) 
+    //   console.log('Done with files');
+    //   req.session.parsedTextOutput = excelJSON;
+    //   res.redirect("/dataaggregator");
+    // }
+    // if(req.files) processFiles()
+
+
+    // THIS WORKS:
+    // pdfParser = new PDFParser(this, 2); // needs to initialize to clear cashe
+    // let file = 'fileName', lastFile = 'lastFile', cnt = 0
+    // let excelJSON = [] 
+
+    // pdfParser.on("pdfParser_dataError", (errData) =>
+    //   console.error(errData.parserError)
+    // ); 
+
+    // pdfParser.on("pdfParser_dataReady", (pdfData) => {
+    //   console.log('File Name Check: ' + lastFile + ' === ' + file + ' = ' + (lastFile === file)) 
+    //   if(lastFile === file){
+    //     console.log('skipping duplicate');
+    //     return
+    //   }
+    //   lastFile = file // flag for dups
+    //   console.log('NEW FILE received pdf: ' + file)
+    //   try{ 
+    //     let parsedText = JSON.stringify(pdfData)  
+    //     //console.log(parsedText)
+    //   }catch (err) {
+    //     console.log(err) 
+    //   }
+    //   console.log('END Parse' + file)  
+    // });  
+    // function resolveAfter2Seconds(smnt) {
+    //   return new Promise((resolve) => { 
+    //     file = smnt.originalname   
+    //     pdfParser.loadPDF(smnt.path)
+    //     setTimeout(() => {
+    //       resolve('processed file ' + smnt.originalname);
+    //     }, 5000);
+    //   });
+    // }
+    // const loadPDF = (filePath) => {
+
+    // }
+    // console.log('Starting ')
+    // for(let i=0;i<req.files.length;i++){
+    //   const respond = await resolveAfter2Seconds(req.files[i])
+    //   console.log(respond)
+    // }
+    // console.log('Done with files');
+    // res.redirect("/dataaggregator");
+
+
+  
+    function resolveAfter2Seconds(smnt) {
+      return new Promise((resolve) => { 
+        file = smnt.originalname   
+        pdfParser.loadPDF(smnt.path)
+        setTimeout(() => {
+          resolve('processed file ' + smnt.originalname);
+        }, 5000);
+      });
+    }
+    
+    let cnt = 0, excelJSON = [] 
+    const loadPDF = (stmnt) => {
+      if(req.files.length === cnt){
+        console.log('Done');
+        return new Promise((resolve) => { 
+          res.redirect("/dataaggregator");
+        })
+      }
+      let file = stmnt.originalname
+      pdfParser = new PDFParser(this, 2); // needs to initialize to clear cashe
+      pdfParser.loadPDF(stmnt.path)
+
+      pdfParser.on("pdfParser_dataError", (errData) =>
+        console.error(errData.parserError)
+      ); 
+
+      pdfParser.on("pdfParser_dataReady", (pdfData) => {
+        //console.log('File Name Check: ' + lastFile + ' === ' + file + ' = ' + (lastFile === file))
+        // if(lastFile === file){
+        //   console.log('Skipping duplicate');
+        //   loadPDF(req.files[++cnt]) // recursion to process next file
+        // }
+        //lastFile = file // flag for dups
+        console.log('NEW FILE received pdf: ' + file)
+        try{ 
+          let parsedText = JSON.stringify(pdfData)  
+          //console.log(parsedText)
+        }catch (err) {
+          console.log(err) 
+        }
+        console.log('END Parse' + file)  
+        loadPDF(req.files[++cnt]) // recursion to process next file        
+      });  
+    }
+    
+    console.log('Starting ')
+    loadPDF(req.files[cnt]) // initial load
+  }, 
+
+  // parsePDF: async (req, res) => {
+  //   pdfParser.on("pdfParser_dataError", (errData) =>
+  //     console.error(errData.parserError)
+  //   ); 
+  //   pdfParser.on("pdfParser_dataReady", (pdfData) => {
+  //     console.log('received pdf')
+  //     let activity = ''
+  //     let excelJSON = [] 
+  //     try{ 
+  //       //console.log(pdfData) 
+  //       let parsedText = JSON.stringify(pdfData)        
+  //       for(let i=0;i<20 && parsedText.indexOf('"T":"balance"') != -1;i++){
+  //         parsedText = parsedText.substring(parsedText.indexOf('"T":"balance"')+4) // chop header
+  //         parsedText = parsedText.substring(parsedText.indexOf('}]}')+4) // chop header
+  //         activity += parsedText.substring(0, parsedText.indexOf('],"Fields":[]'))+',' // add page and add ',' to connect the JSON pages
+  //       }
+  //       activity = activity.substring(0, activity.indexOf('Ending%20balance')) // chop footer
+  //       activity = activity.substring(0, activity.lastIndexOf(',{"x":')) // chop footer
+  //       activity = activity.replaceAll(',"S":-1,"TS":[0,10.2,0,0]', '') // remove useless data
+  //       activity = activity.replaceAll('"clr":0,"sw":0.32553125,"A":"left",', '') // remove useless data  
+
+  //       // fs.writeFile( 
+  //       //   "statements/parsed.json",
+  //       //   activity,
+  //       //   function (err, result) {
+  //       //     console.log(err);
+  //       //   }
+  //       // );
+
+  //       activity = JSON.parse('['+activity+']')
+  //       //console.log(activity)
+  //       console.log('generated json')
+  //     }catch (err) {
+  //       console.log(err) 
+  //     }
+  //     //console.log(activity)
+  //     let actLine // needs to be outside loop to build line
+  //     activity.forEach(col => { 
+  //       if(col.x === 3.8){ // if date then also start new line
+  //         // replace special characters
+  //         if(actLine) actLine.Description = actLine.Description.replaceAll('%24', '$').replaceAll('%26', '&').replaceAll('%20', ' ').replaceAll('%23', '#').replaceAll('%2F', '/').replaceAll('%2C', ',')
+  //         actLine = {'Description':''} // initialize new line if it's the date
+  //         excelJSON.push(actLine)  
+  //         actLine['Date'] = col.R[0]['T'].replaceAll('%2F', '/')+'/2021'
+  //       }else if(col.x > 7.5 && col.x < 8) actLine['Check#'] = col.R[0].T 
+  //       else if(col.x === 9.275) actLine['Description'] += col.R[0]['T']
+  //       else if(col.x > 24 && col.x < 27) actLine['Amount'] = +col.R[0]['T'].replaceAll('%2C', '') 
+  //       else if(col.x > 28 && col.x < 31) actLine['Amount'] = -col.R[0]['T'].replaceAll('%2C', '')
+  //       //actLine['x'] = col.x 
+  //       console.log('Date: '+actLine['Date'])
+  //     }) 
+  //     // generate worksheet and workbook 
+  //     const ws = XLSX.utils.json_to_sheet(excelJSON);
+  //     const wb = XLSX.utils.book_new();
+  //     XLSX.utils.book_append_sheet(wb, ws, "Filtered");
+  //     XLSX.writeFile(wb, "statements/parsedTransactions.xlsx", { compression: true });
+  //     console.log('generated xlxs file')
+       
+  //     //console.log(JSON.stringify(excelJSON)) 
+  //     //console.log(excelJSON)      
+  //     req.session.parsedTextOutput = excelJSON;
+  //     res.redirect("/dataaggregator");
+  //     //res.render("dataaggregator.ejs", { parsedTextOutput: excelJSON })
+  //   });  
+  //   if(req.file) await pdfParser.loadPDF(req.file.path)
+  //   console.log('END test') 
+
+  // },
   getPost: async (req, res) => {
     try {
       //id parameter comes from the post routes

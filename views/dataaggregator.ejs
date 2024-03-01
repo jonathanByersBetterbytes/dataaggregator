@@ -63,13 +63,21 @@
 								<span class="date">PDF Parser</span>
 								<h2><a href="#">Statement Upload</a></h2>
 							</header>
+			<form action="/post/parsePDFs" enctype="multipart/form-data" method="POST">
+				<div class="mb-3">
+					<label for="smntUpload" class="form-label">Upload Multiple PDFs Here:</label>
+					<input type="file" class="form-control" id="statementsUpload" name="files[]" multiple accept=".pdf,.xlsx,.xls,.csv"/>
+				</div>
+				<button type="submit" class="btn btn-primary" value="Upload">Submit</button>
+			</form>
+
 							<form action="/post/parsePDF" enctype="multipart/form-data" method="POST">
 								<div class="mb-3">
-								  <label for="imgUpload" class="form-label">Upload PDF Here:</label>
+								  <label for="imgUpload" class="form-label">Upload a signle PDF Here:</label>
 								  <input type="file" class="form-control" id="imageUpload" name="file">
 								</div>
 								<button type="submit" class="btn btn-primary" value="Upload">Submit</button>
-							  </form>
+							</form>
 							<!-- <div id=""><input type="file" id="input_dom_element"></div> -->
 							
 						<% if(parsedTextOutput.length>0){ %>
@@ -90,7 +98,7 @@
 				<% for(let i=0;i<parsedTextOutput.length;i++){ %>
 					<tr>
 						<td><%= parsedTextOutput[i].Date %></td>
-						<td><%= parsedTextOutput[i].Description.replaceAll('authorized', '') %></td>
+						<td><%= parsedTextOutput[i].Description %></td>
 						<td><%= parsedTextOutput[i].Amount %></td>
 						<td><%= parsedTextOutput[i]['Check#'] %></td>
 					</tr>
