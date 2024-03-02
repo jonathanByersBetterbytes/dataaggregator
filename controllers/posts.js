@@ -137,29 +137,17 @@ module.exports = {
     //   console.log(respond)
     // }
     // console.log('Done with files');
-    // res.redirect("/dataaggregator");
-
-
-  
-    function resolveAfter2Seconds(smnt) {
-      return new Promise((resolve) => { 
-        file = smnt.originalname   
-        pdfParser.loadPDF(smnt.path)
-        setTimeout(() => {
-          resolve('processed file ' + smnt.originalname);
-        }, 5000);
-      });
-    }
+    // res.redirect("/dataaggregator")
     
     let cnt = 0, excelJSON = [] 
     const loadPDF = (stmnt) => {
       if(req.files.length === cnt){
         console.log('Done');
         return new Promise(() => { 
+          req.session.parsedTextOutput = excelJSON;
           res.redirect("/dataaggregator");
         })
       }
-      let file = stmnt.originalname
       pdfParser = new PDFParser(this, 2); // needs to initialize to clear cashe
       pdfParser.loadPDF(stmnt.path)
 
@@ -168,14 +156,45 @@ module.exports = {
       ); 
 
       pdfParser.on("pdfParser_dataReady", (pdfData) => {
-        console.log('NEW FILE received pdf: ' + file)
+        console.log('NEW FILE received pdf: ' + stmnt.originalname)
+        let activity = ''
         try{ 
           let parsedText = JSON.stringify(pdfData)  
-          //console.log(parsedText)
+          for(let i=0;i<20 && parsedText.indexOf('"T":"balance"') != -1;i++){
+            parsedText = parsedText.substring(parsedText.indexOf('"T":"balance"')+4) // chop header
+            parsedText = parsedText.substring(parsedText.indexOf('}]}')+4) // chop header
+            activity += parsedText.substring(0, parsedText.indexOf('],"Fields":[]'))+',' // add page and add ',' to connect the JSON pages
+          }
+          activity = activity.substring(0, activity.indexOf('Ending%20balance')) // chop footer
+          activity = activity.substring(0, activity.lastIndexOf(',{"x":')) // chop footer
+          activity = activity.replaceAll(',"S":-1,"TS":[0,10.2,0,0]', '') // remove useless data
+          activity = activity.replaceAll('"clr":0,"sw":0.32553125,"A":"left",', '') // remove useless data  
+  
+          activity = JSON.parse('['+activity+']')
+          console.log('generated json ' + stmnt.originalname)
         }catch (err) {
           console.log(err) 
         }
-        console.log('END Parse' + file)  
+    
+        let actLine // needs to be outside loop to build line
+        activity.forEach(col => { 
+          if(col.x === 3.8){ // if date then also start new line
+            // replace special characters
+            if(actLine) actLine.Description = actLine.Description.replaceAll('%24', '$').replaceAll('%26', '&').replaceAll('%20', ' ').replaceAll('%23', '#').replaceAll('%2F', '/').replaceAll('%2C', ',')
+            actLine = {'Description':''} // initialize new line if it's the date
+            excelJSON.push(actLine)  
+            // year needs to be dynamicaly scraped from name: '2021.01.31.pdf'
+            actLine['Date'] = col.R[0]['T'].replaceAll('%2F', '/')+'/'+stmnt.originalname.substring(0,4)
+          }else if(col.x > 7.5 && col.x < 8) actLine['Check#'] = col.R[0].T 
+          else if(col.x === 9.275) actLine['Description'] += col.R[0]['T']  // build description
+          else if(col.x > 24 && col.x < 27) actLine['Amount'] = +col.R[0]['T'].replaceAll('%2C', '') // deposit
+          else if(col.x > 28 && col.x < 31) actLine['Amount'] = -col.R[0]['T'].replaceAll('%2C', '') // withdrawal
+          //actLine['x'] = col.x 
+          //console.log('Description: '+actLine['Description'])
+        }) 
+        //console.log(JSON.stringify(excelJSON)) 
+
+        console.log('END Parse ' + stmnt.originalname)  
         loadPDF(req.files[++cnt]) // recursion to process next file        
       });  
     }

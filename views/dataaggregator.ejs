@@ -65,24 +65,25 @@
 							</header>
 			<form action="/post/parsePDFs" enctype="multipart/form-data" method="POST">
 				<div class="mb-3">
-					<label for="smntUpload" class="form-label">Upload Multiple PDFs Here:</label>
+					<label for="formatSelector" class="form-label">Select the Statement Format:</label>
+					<select id="formatSelector">
+						<option value="wellsfargoChecking" selected="selected">
+							Wells Fargo Checking
+						</option>
+						<option value="amexBusCredit">
+							Amex Business Credit
+						</option>
+			        </select>
+					<label for="statementsUpload" class="form-label">Upload Multiple PDFs Here:</label>
 					<input type="file" class="form-control" id="statementsUpload" name="files[]" multiple accept=".pdf,.xlsx,.xls,.csv"/>
 				</div>
 				<button type="submit" class="btn btn-primary" value="Upload">Submit</button>
 			</form>
-
-							<form action="/post/parsePDF" enctype="multipart/form-data" method="POST">
-								<div class="mb-3">
-								  <label for="imgUpload" class="form-label">Upload a signle PDF Here:</label>
-								  <input type="file" class="form-control" id="imageUpload" name="file">
-								</div>
-								<button type="submit" class="btn btn-primary" value="Upload">Submit</button>
-							</form>
-							<!-- <div id=""><input type="file" id="input_dom_element"></div> -->
+						<!-- <div id=""><input type="file" id="input_dom_element"></div> -->
 							
 						<% if(parsedTextOutput.length>0){ %>
 							<ul class="actions special">
-								<li><a href="parsedTransactions.xlsx" class="button large" id="Parsed Output">File Saved in Your Downloads</a></li>
+								<li><a href="parsedTransactions.xlsx" class="button large" style="color: blue;" id="Parsed Output">File Saved in Your Downloads</a></li>
 							</ul>
 						<% } %>
 							<table id='myTable'>
@@ -130,6 +131,7 @@
 	<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 	
 	<script>
+		input_dom_element.addEventListener("change", handleFileAsync, false);
 		<% if(parsedTextOutput.length > 0){ %>
 			const tableBody = document.querySelector('#myTable tbody')
 			let row, dateCell, desCell, amountCell, checkNumCell
@@ -163,29 +165,6 @@
 		<% } %>
 		
 		
-		// create table
-		// jsonTrans.forEach(act => {
-		// 	row = document.createElement('tr')
-
-		// 	dateCell = document.createElement('td')
-		// 	dateCell.textContent = act.Date
-		// 	row.appendChild(dateCell)
-
-		// 	desCell = document.createElement('td')
-		// 	desCell.textContent = act.Description
-		// 	row.appendChild(desCell)
-
-		// 	amountCell = document.createElement('td')
-		// 	amountCell.textContent = act.Amount
-		// 	row.appendChild(amountCell)
-
-		// 	checkNumCell = document.createElement('td')
-		// 	checkNumCell.textContent = act['Check#']
-		// 	row.appendChild(checkNumCell)
-
-		// 	tableBody.appendChild(row)
-		// })
-		//alert(jsonTrans)
 	</script> 
 	</body>
 </html>
