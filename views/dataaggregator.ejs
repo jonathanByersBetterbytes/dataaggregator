@@ -13,21 +13,21 @@
 		<link rel="stylesheet" href="/assets/css/main.css" />
 		<noscript><link rel="stylesheet" href="/assets/css/noscript.css" /></noscript>
 	</head>
-	<body class="is-preload">
+<body class="is-preload">
 
-		<!-- Wrapper -->
-			<div id="wrapper" class="fade-in">
+	<!-- Wrapper -->
+		<div id="wrapper" class="fade-in">
 
-				<!-- Intro -->
-					<div id="intro">
-						<h1>Hello, this is<br />
-							DATA AGGREGATOR</h1>
-							<p>A Tool For Compiling Data From Multiple Sources <br />
-								and Displaying in Meaningful Format.</p>
-							<ul class="actions">
-								<li><a href="#header" class="button icon solid solo fa-arrow-down scrolly">Continue</a></li>
-							</ul>
-					</div>
+	<!-- Intro -->
+	<div id="intro">
+		<h1>Hello, this is<br />
+			DATA AGGREGATOR</h1>
+			<p>A Tool For Compiling Data From Multiple Sources <br />
+				and Displaying in Meaningful Format.</p>
+		<ul class="actions">
+			<li><a href="#header" class="button icon solid solo fa-arrow-down scrolly">Continue</a></li>
+		</ul>
+	</div>
 
 				<!-- Header -->
 					<header id="header">
@@ -38,7 +38,7 @@
 					<nav id="nav">
 						<ul class="links">
 							<li class="active"><a href="index.html">PDF Statements to Excel</a></li>
-							<li class=""><a href="index.html">PDF Statements to Formated Raw Text</a></li>
+							<li class=""><a href="index.html">PDF Statements to Raw Text</a></li>
 							<li class=""><a href="index.html">PDF Statements to CSV</a></li>
 							<!-- 
 							<li><a href="generic.html">Generic Page</a></li>
@@ -46,10 +46,11 @@
 							-->
 						</ul>
 						<ul class="icons">
-							<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
-							<li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
-							<li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
-							<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
+							<li><a href="https://twitter.com/jonathankbyers" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+							<li><a href="https://www.linkedin.com/in/jonathankbyers" class="icon brands fa-linkedin"><span class="label">LinkedIn</span></a></li>
+							<li><a href="https://www.facebook.com/jonathan.k.byers" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+							<li><a href="https://www.instagram.com/jonathankbyers/" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+							<li><a href="https://github.com/jonathanByersBetterbytes/" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
 						</ul>
 					</nav>
 
@@ -64,9 +65,9 @@
 								<h2><a href="#">Statement Upload</a></h2>
 							</header>
 			<form action="/post/parsePDFs" enctype="multipart/form-data" method="POST">
-				<div class="mb-3">
+				<div class="mb-3" align="center">
 					<label for="formatSelector" class="form-label">Select the Statement Format:</label>
-					<select id="formatSelector">
+					<select id="formatSelector" style="width: fit-content;">
 						<option value="wellsfargoChecking" selected="selected">
 							Wells Fargo Checking
 						</option>
@@ -74,6 +75,7 @@
 							Amex Business Credit
 						</option>
 			        </select>
+					<br/>
 					<label for="statementsUpload" class="form-label">Upload Multiple PDFs Here:</label>
 					<input type="file" class="form-control" id="statementsUpload" name="files[]" multiple accept=".pdf,.xlsx,.xls,.csv"/>
 				</div>
@@ -83,7 +85,7 @@
 							
 						<% if(parsedTextOutput.length>0){ %>
 							<ul class="actions special">
-								<li><a href="parsedTransactions.xlsx" class="button large" style="color: blue;" id="Parsed Output">File Saved in Your Downloads</a></li>
+								<li><a href="parsedTransactions.xlsx" class="button large" style=" background-color: rgb(164, 164, 215); " id="Parsed Output">File Saved in Your Downloads</a></li>
 							</ul>
 						<% } %>
 							<table id='myTable'>
@@ -131,7 +133,7 @@
 	<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 	
 	<script>
-		input_dom_element.addEventListener("change", handleFileAsync, false);
+		// input_dom_element.addEventListener("change", handleFileAsync, false);
 		<% if(parsedTextOutput.length > 0){ %>
 			const tableBody = document.querySelector('#myTable tbody')
 			let row, dateCell, desCell, amountCell, checkNumCell
