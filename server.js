@@ -1,4 +1,6 @@
 const express = require("express");
+//Use .env file in config folder
+require("dotenv").config({ path: "./config/.env" });
 const app = express();
 const mongoose = require("mongoose");
 const passport = require("passport");
@@ -18,8 +20,6 @@ const postRoutes = require("./routes/posts");
 
 const Book = require('./models/books')
 
-//Use .env file in config folder
-require("dotenv").config({ path: "./config/.env" });
 
 // Passport config
 require("./config/passport")(passport);
